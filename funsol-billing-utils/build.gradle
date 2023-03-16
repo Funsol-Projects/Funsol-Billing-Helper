@@ -16,6 +16,7 @@ android {
         multiDexEnabled true
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
     }
 
     buildTypes {
@@ -27,8 +28,8 @@ android {
 
     compileOptions {
 
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
@@ -48,13 +49,13 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.Funsol-Projects'
                 artifactId = 'Funsol-Billing-Helper'
-                version = '1.0'
+                version = 'v1.0.1'
             }
             debug(MavenPublication) {
                 from components.debug
                 groupId = 'com.github.Funsol-Projects'
                 artifactId = 'Funsol-Billing-Helper'
-                version = '1.0'
+                version = 'v1.0.1'
             }
         }
     }

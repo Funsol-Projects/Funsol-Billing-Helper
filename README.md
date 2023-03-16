@@ -33,7 +33,7 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 
 ```kotlin
     dependencies {
-        implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:1.0'
+        implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.1'
     }
 ```  
 
