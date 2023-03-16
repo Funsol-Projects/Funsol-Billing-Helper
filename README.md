@@ -260,7 +260,7 @@ This Method used for Releasing the client object and save from memory leaks
 ## License
 
 #### MIT License
-#### Copyright (c) 2023 Hannan Shahid
+#### Copyright (c) 2023 [Hannan Shahid](https://github.com/hannanshahid)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
