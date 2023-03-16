@@ -5,7 +5,9 @@ import androidx.annotation.Keep;
 @Keep
 public enum ErrorType {
     DEVELOPER_ERROR,
+
     CLIENT_NOT_READY,
+
     CLIENT_DISCONNECTED,
     PRODUCT_NOT_EXIST,
     OFFER_NOT_EXIST,

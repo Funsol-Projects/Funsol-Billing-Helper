@@ -456,16 +456,12 @@ class FunSolBillingHelper(private val activity: Activity) {
     }
 
 
-    /** Log Util function
-     * */
     private fun Log(debugMessage: String) {
         if (enableLog) {
             Log.d(TAG, debugMessage)
         }
     }
 
-    /** This Method used for Releasing the client object and save from memory leaks
-     * */
     fun release() {
         if (billingClient != null && billingClient!!.isReady) {
             Log("BillingHelper instance release: ending connection...")
@@ -473,9 +469,6 @@ class FunSolBillingHelper(private val activity: Activity) {
         }
     }
 
-    /** This Method used for unsubscribe the subscription from play store
-     *  pass Subs  Id in parameter
-     * */
     fun unsubscribe(activity: Activity, SubId: String) {
         try {
             val subscriptionUrl = "http://play.google.com/store/account/subscriptions?package=" + activity.packageName + "&sku=" + SubId

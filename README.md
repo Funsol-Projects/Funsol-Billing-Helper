@@ -3,7 +3,11 @@
 
 Funsol Billing Helper is a simple, straight-forward implementation of the Android v5.1 In-app billing API
 
-Now only subscription supported 
+>Now only **Subscription** supported.
+
+### **Billing v5 subscription model:**
+
+[![Alt](https://mermaid.ink/img/pako:eNqNkcsKwjAQRX8lzFp_IAtBW18LQai7xsWYTGwgTSRNEBH_3aggSik6q-GewyzmXkF6RcBBW3-WDYbIdqVwLM-0rtKhk8GcovFuz8bjCZvVM-yIbS26_bBV_GWVPevzelayM6-91hQG-eKLFz2-_MFXX7zs8fWbPwwYQUuhRaPyw66PREBsqCUBPK-KNCYbBQh3yyqm6KuLk8BjSDSCdFIYqTR4DNgC12i7nJIy0YfNq4RnF7c7kh2AGA?type=png)](https://mermaid.live/edit#pako:eNqNkcsKwjAQRX8lzFp_IAtBW18LQai7xsWYTGwgTSRNEBH_3aggSik6q-GewyzmXkF6RcBBW3-WDYbIdqVwLM-0rtKhk8GcovFuz8bjCZvVM-yIbS26_bBV_GWVPevzelayM6-91hQG-eKLFz2-_MFXX7zs8fWbPwwYQUuhRaPyw66PREBsqCUBPK-KNCYbBQh3yyqm6KuLk8BjSDSCdFIYqTR4DNgC12i7nJIy0YfNq4RnF7c7kh2AGA)
 
 ## Getting Started
 
@@ -15,7 +19,7 @@ No extra dependencies required
 
 Add maven repository in project level build.gradle or in latest project setting.gradle file
 
-```
+```kotlin
     repositories {
         google()
         mavenCentral()
@@ -27,7 +31,7 @@ Add maven repository in project level build.gradle or in latest project setting.
 
 Add Funsol Billing Helper dependencies in App level build.gradle.
 
-```
+```kotlin
     dependencies {
         implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:1.0'
     }
@@ -35,9 +39,9 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 
 ## Step 3 (Setup)
 
-Finally intialize Billing class and setup Subscription Ids
+Finally initialise Billing class and setup Subscription Ids
 
-```
+```kotlin 
     FunSolBillingHelper(this).setSubKeys(mutableListOf("basic", "standard"))
 ```
 Call this in first stable activity
@@ -45,44 +49,50 @@ Call this in first stable activity
 ### Enable Logs
 
 
-```
+```kotlin
     FunSolBillingHelper(this).setSubKeys(mutableListOf("basic", "standard")).enableLogging()
 ```
 
-### Get all subscriptions prices
+### Get subscription price
 
-return all products prices list
+Get all products prices list
 
-```
+```kotlin
     FunSolBillingHelper(this).getAllProductPrices()
 ```
 
+Get specific subscription price (without offer)
 
-### Get specfic subscription price
 
-
+```kotlin
+    FunSolBillingHelper(this).getProductPriceByKey("Base Plan ID","").price
 ```
+
+Get specific subscription price (with offer)
+
+
+```kotlin
     FunSolBillingHelper(this).getProductPriceByKey("Base Plan ID","Offer ID").price
 ```
-This method return ```ProductPriceInfo``` object that conatain complete detail   about subscription. To get only price just call ```.Price```.
 
+This method return ```ProductPriceInfo``` object that contain complete detail   about subscription. To get only price just call ```.Price```.
 
 ### Subscribe to a Subscription
 
 Subscribe to a Subscription
-```
+```kotlin
     FunSolBillingHelper(this).subscribe(this, "Base Plan ID")
 ```
 Subscribe to a offer
-```
+```kotlin
     FunSolBillingHelper(this).subscribe(this, "Base Plan ID","Offer ID")
 ```
 
-Note: it auto acknowledge the susbscription and give callback when product acknowledged sucessfully.
+**Note: it auto acknowledge the subscription and give callback when product acknowledged successfully.**
 
 ### Upgrade or Downgrade Subscription
 
- ```
+ ```kotlin
     FunSolBillingHelper(this).upgradeOrDowngradeSubscription(this, "Old Base Plan ID", "Old Offer Id (If offer )", "Old Base Plan ID", ProrationMode)
 
 ```
@@ -114,14 +124,14 @@ Note: it auto acknowledge the susbscription and give callback when product ackno
 ```
 Example :
 
-```
+```kotlin
   FunSolBillingHelper(this).upgradeOrDowngradeSubscription(this, "Old Base Plan ID", "Old Offer Id (If offer )", "Old Base Plan ID", BillingFlowParams.ProrationMode.IMMEDIATE_AND_CHARGE_FULL_PRICE)
- ```
+```
 
 ### Billing Listeners
 
 Interface implementation to handle purchase results and errors.
- ```
+ ```kotlin
       FunSolBillingHelper(this).setBillingEventListener(object : BillingEventListener {
             override fun onProductsPurchased(purchases: List<Purchase?>) {
             }
@@ -194,35 +204,44 @@ Interface implementation to handle purchase results and errors.
 
 For check if any subscription is subscribe
 
- ```
+ ```kotlin
   FunSolBillingHelper(this).isPremiumUser()
 
  ``` 
 
 For check if any specific subscription is subscribe (by Base Plan ID)
 
-``` 
+``` kotlin
   FunSolBillingHelper(this).isPremiumUserByBasePlanKey("Base Plan ID")
 
  ``` 
 For check if any specific subscription is subscribe (by Subscription ID)
 
-``` 
+``` kotlin
   FunSolBillingHelper(this).isPremiumUserBySubBaseIDKey("Subscription ID")
 
  ``` 
 
 ### Cancel  Subscription
 
-```
+```kotlin
 FunSolBillingHelper(this).unsubscribe(this,"Subscription ID")
-
 ```
 
 
-### Check susbscription support
+### Handle pending purchases
 
+to check and handle pending purchase call this below method on activity ```OnResume()``` method.
+
+```kotlin
+FunSolBillingHelper(this).fetchActivePurchases()
 ```
+
+**Note: Call this method in background thread. Use Coroutine to run this method in background.**
+
+### Check subscription support
+
+```kotlin
 FunSolBillingHelper(this).areSubscriptionsSupported()
 
 ```
@@ -231,7 +250,7 @@ FunSolBillingHelper(this).areSubscriptionsSupported()
 ### Release billing client object
 
 Call this method when app close or when billing not needed any more.
-```
+```kotlin
 FunSolBillingHelper(this).release()
 
 ```
