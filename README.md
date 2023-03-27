@@ -20,12 +20,14 @@ No extra dependencies required
 
 Add maven repository in project level build.gradle or in latest project setting.gradle file
 
-```kotlin
+```kotlin 
+
     repositories {
         google()
         mavenCentral()
         maven { url "https://jitpack.io" }
     }
+ 
 ```  
 
 ## Step 2
@@ -33,9 +35,11 @@ Add maven repository in project level build.gradle or in latest project setting.
 Add Funsol Billing Helper dependencies in App level build.gradle.
 
 ```kotlin
+
     dependencies {
-        implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.2'
+        implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.2' 
     }
+ 
 ```  
 
 ## Step 3 (Setup)
@@ -43,12 +47,19 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 Finally initialise Billing class and setup Subscription Ids
 
 ```kotlin 
-    FunSolBillingHelper(this).setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
+
+    FunSolBillingHelper(this)
+    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
+ 
 ```
 if both subscription and In-App
 
 ```kotlin 
-    FunSolBillingHelper(this).setSubKeys(mutableListOf("Subs Key", "Subs Key 2")).setInAppKeys(mutableListOf("In-App Key"))
+
+    FunSolBillingHelper(this)
+    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
+    .setInAppKeys(mutableListOf("In-App Key")) 
+  
 ```
 
 Call this in first stable activity
@@ -57,7 +68,13 @@ Call this in first stable activity
 
 
 ```kotlin
-    FunSolBillingHelper(this).setSubKeys(mutableListOf("Subs Key", "Subs Key 2")).enableLogging()
+
+    FunSolBillingHelper(this)
+    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
+    .setInAppKeys(mutableListOf("In-App Key"))
+    .enableLogging()
+
+
 ```
 ### Buy In-App Product
 
@@ -92,6 +109,7 @@ Subscribe to a offer
 ```ProrationMode``` is a setting in subscription billing systems that determines how proration is calculated when changes are made to a subscription plan. There are different proration modes, including:
 
 ```
+
   1. DEFERRED
 
     Replacement takes effect when the old plan expires, and the new price will be charged at the same time.
@@ -113,6 +131,7 @@ Subscribe to a offer
     Replacement takes effect immediately, and the remaining time will be prorated and credited to the user.
 
   6. UNKNOWN_SUBSCRIPTION_UPGRADE_DOWNGRADE_POLICY
+ 
 
 ```
 Example :
@@ -125,73 +144,75 @@ Example :
 
 Interface implementation to handle purchase results and errors.
  ```kotlin
+
       FunSolBillingHelper(this).setBillingEventListener(object : BillingEventListener {
-    override fun onProductsPurchased(purchases: List<Purchase?>) {
-    }
-
-    override fun onPurchaseAcknowledged(purchase: Purchase) {
-    }
-
-    override fun onBillingError(error: ErrorType) {
-        when (error) {
-            ErrorType.CLIENT_NOT_READY -> {
-
-            }
-            ErrorType.CLIENT_DISCONNECTED -> {
-
-            }
-            ErrorType.PRODUCT_NOT_EXIST -> {
-
-            }
-            ErrorType.BILLING_ERROR -> {
-
-            }
-            ErrorType.USER_CANCELED -> {
-
-            }
-            ErrorType.SERVICE_UNAVAILABLE -> {
-
-            }
-            ErrorType.BILLING_UNAVAILABLE -> {
-
-            }
-            ErrorType.ITEM_UNAVAILABLE -> {
-
-            }
-            ErrorType.DEVELOPER_ERROR -> {
-
-            }
-            ErrorType.ERROR -> {
-
-            }
-            ErrorType.ITEM_ALREADY_OWNED -> {
-
-            }
-            ErrorType.ITEM_NOT_OWNED -> {
-
+            override fun onProductsPurchased(purchases: List<Purchase?>) {
             }
 
-            ErrorType.SERVICE_DISCONNECTED -> {
-
+            override fun onPurchaseAcknowledged(purchase: Purchase) {
             }
 
-            ErrorType.ACKNOWLEDGE_ERROR -> {
+            override fun onBillingError(error: ErrorType) {
+                when (error) {
+                    ErrorType.CLIENT_NOT_READY -> {
 
+                    }
+                    ErrorType.CLIENT_DISCONNECTED -> {
+
+                    }
+                    ErrorType.PRODUCT_NOT_EXIST -> {
+
+                    }
+                    ErrorType.BILLING_ERROR -> {
+
+                    }
+                    ErrorType.USER_CANCELED -> {
+
+                    }
+                    ErrorType.SERVICE_UNAVAILABLE -> {
+
+                    }
+                    ErrorType.BILLING_UNAVAILABLE -> {
+
+                    }
+                    ErrorType.ITEM_UNAVAILABLE -> {
+
+                    }
+                    ErrorType.DEVELOPER_ERROR -> {
+
+                    }
+                    ErrorType.ERROR -> {
+
+                    }
+                    ErrorType.ITEM_ALREADY_OWNED -> {
+
+                    }
+                    ErrorType.ITEM_NOT_OWNED -> {
+
+                    }
+
+                    ErrorType.SERVICE_DISCONNECTED -> {
+
+                    }
+
+                    ErrorType.ACKNOWLEDGE_ERROR -> {
+
+                    }
+
+                    ErrorType.ACKNOWLEDGE_WARNING -> {
+
+                    }
+                    
+                    ErrorType.OLD_PURCHASE_TOKEN_NOT_FOUND -> {
+
+                    }
+                    else -> {
+
+                    }
+                }
             }
-
-            ErrorType.ACKNOWLEDGE_WARNING -> {
-
-            }
-
-            ErrorType.OLD_PURCHASE_TOKEN_NOT_FOUND -> {
-
-            }
-            else -> {
-
-            }
-        }
-    }
-})
+        })
+ 
 ```
 
 ## Step 4 (Product's Detail)
