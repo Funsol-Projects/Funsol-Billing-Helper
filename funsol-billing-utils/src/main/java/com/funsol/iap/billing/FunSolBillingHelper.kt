@@ -638,8 +638,14 @@ class FunSolBillingHelper(private val activity: Activity) {
             } else {
                 productDetail.subscriptionOfferDetails?.forEach {
                     if (it.basePlanId == productKey) {
-                        return productDetail.productType
+                        /**
+                         * The productKey is from purchase.products.first(),but is SubsID,
+                         * it's May be different from basePlanID
+                         * so the code "  Log("SUBS item buy after acknowledge ")
+                         * purchasedProductList.add(purchase)  " will be never execute
+                         */
                     }
+                    return productDetail.productType
                 }
             }
         }
