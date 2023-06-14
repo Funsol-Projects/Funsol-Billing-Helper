@@ -2,11 +2,11 @@
 
 [![](https://jitpack.io/v/Funsol-Projects/Funsol-Billing-Helper.svg)](https://jitpack.io/#Funsol-Projects/Funsol-Billing-Helper)
 
-Funsol Billing Helper is a simple, straight-forward implementation of the Android v5.1 In-app billing API
+Funsol Billing Helper is a simple, straight-forward implementation of the Android v6.0 In-app billing API
 
 > Support both IN-App and Subscriptions.
 
-### **Billing v5 subscription model:**
+### **Billing v6 subscription model:**
 
 ![Subcription](https://user-images.githubusercontent.com/106656179/227849820-8b9e8566-fa6e-40d4-862e-77aaeaa65e6c.png)
 
@@ -36,10 +36,10 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 
 ```kotlin
 
-    dependencies {
-        implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.2' 
-    }
- 
+dependencies {
+  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.3'
+}
+
 ```  
 
 ## Step 3 (Setup)
@@ -61,11 +61,43 @@ if both subscription and In-App
     .setInAppKeys(mutableListOf("In-App Key")) 
   
 ```
+if consumable in-App
+```kotlin 
 
-Call this in first stable activity
+    FunSolBillingHelper(this)
+    .setInAppKeys(mutableListOf("In-App Key, In-App consumable Key")) 
+	.setConsumableKeys(mutableListOf("In-App consumable Key")) 
+ 
+```
+**Note: you have add consumable key in both func ```setInAppKeys()``` and ```setConsumableKeys()```**
+
+Call this in first stable activity or in App class
+
+### Billing Client Listeners
+
+```kotlin
+
+    FunSolBillingHelper(this)
+    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
+    .setInAppKeys(mutableListOf("In-App Key"))
+    .enableLogging()
+	.setBillingClientListener(object : BillingClientListener {
+            override fun onClientReady() {
+                Log.i("billing", "onClientReady: ")
+            }
+
+            override fun onClientInitError() {
+                Log.i("billing", "onClientInitError: ")
+            }
+
+        })
+
+
+```
 
 ### Enable Logs
 
+##### Only for debug
 
 ```kotlin
 
@@ -76,11 +108,25 @@ Call this in first stable activity
 
 
 ```
+
+##### For both Debug/Release
+
+```kotlin
+
+    FunSolBillingHelper(this)
+    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
+    .setInAppKeys(mutableListOf("In-App Key"))
+    .enableLogging(isEnableWhileRelease = true)
+
+
+```
+
+
 ### Buy In-App Product
 
 Subscribe to a Subscription
 ```kotlin
-    FunSolBillingHelper(this).buyInApp("In-App Key",false)
+    FunSolBillingHelper(this).buyInApp(activity,"In-App Key",false)
 ```
 ```fasle```  value used for **isPersonalizedOffer** attribute:
 
@@ -91,11 +137,11 @@ If your app can be distributed to users in the European Union, use the **isPerso
 
 Subscribe to a Subscription
 ```kotlin
-    FunSolBillingHelper(this).subscribe(this, "Base Plan ID")
+    FunSolBillingHelper(this).subscribe(activity, "Base Plan ID")
 ```
 Subscribe to a offer
 ```kotlin
-    FunSolBillingHelper(this).subscribe(this, "Base Plan ID","Offer ID")
+    FunSolBillingHelper(this).subscribe(activity, "Base Plan ID","Offer ID")
 ```
 
 **Note: it auto acknowledge the subscription and give callback when product acknowledged successfully.**
@@ -147,9 +193,15 @@ Interface implementation to handle purchase results and errors.
 
       FunSolBillingHelper(this).setBillingEventListener(object : BillingEventListener {
             override fun onProductsPurchased(purchases: List<Purchase?>) {
+			//call back when purchase occured 
             }
 
             override fun onPurchaseAcknowledged(purchase: Purchase) {
+			 //call back when purchase occur and acknowledged 
+            }
+			
+			 override fun onPurchaseConsumed(purchase: Purchase) {
+			 //call back when purchase occur and consumed 
             }
 
             override fun onBillingError(error: ErrorType) {
@@ -204,6 +256,10 @@ Interface implementation to handle purchase results and errors.
                     }
                     
                     ErrorType.OLD_PURCHASE_TOKEN_NOT_FOUND -> {
+
+                    }
+					
+                    ErrorType.CONSUME_ERROR -> {
 
                     }
                     else -> {
@@ -343,6 +399,16 @@ FunSolBillingHelper(this).release()
 
 ```
 This Method used for Releasing the client object and save from memory leaks
+
+## CHANGELOG
+
+- 14-06-2023
+  - Billing lib 6.0.0 updated
+  - Implemented consumable one-time products
+  - Billing Client Ready/Error Callbacks Added
+  - Set Logging for Release or Debug (By default only logs on debug mode)
+  - Now initialize billing lib in App class (if you want)
+  - Billing client ready check issue solved
 
 
 ## License
