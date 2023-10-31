@@ -37,7 +37,7 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 ```kotlin
 
 dependencies {
-  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.3'
+  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.4'
 }
 
 ```  
@@ -104,23 +104,10 @@ Call this in first stable activity or in App class
     FunSolBillingHelper(this)
     .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
     .setInAppKeys(mutableListOf("In-App Key"))
-    .enableLogging()
+    .enableLogging(isEnableLog = true)
 
 
 ```
-
-##### For both Debug/Release
-
-```kotlin
-
-    FunSolBillingHelper(this)
-    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
-    .setInAppKeys(mutableListOf("In-App Key"))
-    .enableLogging(isEnableWhileRelease = true)
-
-
-```
-
 
 ### Buy In-App Product
 
@@ -413,8 +400,8 @@ This Method used for Releasing the client object and save from memory leaks
 
 ## License
 
-#### MIT License
-#### Copyright (c) 2023 
+#### MIT License 
+#### Copyright (c) 2023  Funsol Technologies Pvt Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

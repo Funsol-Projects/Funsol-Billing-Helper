@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     buildToolsVersion "33.0.0"
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 34
 
         multiDexEnabled true
 
@@ -39,7 +39,7 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.android.billingclient:billing:6.0.0'
+    implementation 'com.android.billingclient:billing:6.0.1'
 }
 
 afterEvaluate {
@@ -49,13 +49,13 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.Funsol-Projects'
                 artifactId = 'Funsol-Billing-Helper'
-                version = 'v1.0.3'
+                version = 'v1.0.4'
             }
             debug(MavenPublication) {
                 from components.debug
                 groupId = 'com.github.Funsol-Projects'
                 artifactId = 'Funsol-Billing-Helper'
-                version = 'v1.0.3'
+                version = 'v1.0.4'
             }
         }
     }

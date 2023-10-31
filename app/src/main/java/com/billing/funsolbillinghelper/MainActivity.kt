@@ -13,16 +13,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        FunSolBillingHelper(this).setSubKeys(mutableListOf("basic")).enableLogging(isEnableWhileRelease = true).setBillingClientListener(object : BillingClientListener {
-            override fun onClientReady() {
-                Log.i("billing", "onClientReady: ")
-            }
+        FunSolBillingHelper(this).setInAppKeys(mutableListOf("android.test.purchase")).setSubKeys(mutableListOf("basic")).enableLogging(true)
+            .setBillingClientListener(object : BillingClientListener {
+                override fun onClientReady() {
+                    Log.i("billing", "onClientReady: ")
+                }
 
-            override fun onClientInitError() {
-                Log.i("billing", "onClientInitError: ")
-            }
+                override fun onClientInitError() {
+                    Log.i("billing", "onClientInitError: ")
+                }
 
-        })
+            })
 
     }
 }

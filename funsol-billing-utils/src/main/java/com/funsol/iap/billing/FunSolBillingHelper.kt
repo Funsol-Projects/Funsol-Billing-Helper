@@ -33,7 +33,6 @@ class FunSolBillingHelper(private val context: Context) {
 
 
         private var enableLog = false
-        private var enableLogWhileRelease = false
     }
 
     init {
@@ -53,53 +52,65 @@ class FunSolBillingHelper(private val context: Context) {
                             billingEventListener?.onProductsPurchased(purchasedProductList)
                         }
                     }
+
                     BillingClient.BillingResponseCode.USER_CANCELED -> {
                         Log("User pressed back or canceled a dialog." + " Response code: " + billingResult.responseCode)
                         billingEventListener?.onBillingError(ErrorType.USER_CANCELED)
                     }
+
                     BillingClient.BillingResponseCode.SERVICE_UNAVAILABLE -> {
                         Log("Network connection is down." + " Response code: " + billingResult.responseCode)
                         billingEventListener?.onBillingError(ErrorType.SERVICE_UNAVAILABLE)
 
                     }
+
                     BillingClient.BillingResponseCode.BILLING_UNAVAILABLE -> {
                         Log("Billing API version is not supported for the type requested." + " Response code: " + billingResult.responseCode)
                         billingEventListener?.onBillingError(ErrorType.BILLING_UNAVAILABLE)
 
                     }
+
                     BillingClient.BillingResponseCode.ITEM_UNAVAILABLE -> {
                         Log("Requested product is not available for purchase." + " Response code: " + billingResult.responseCode)
                         billingEventListener?.onBillingError(ErrorType.ITEM_UNAVAILABLE)
 
                     }
+
                     BillingClient.BillingResponseCode.DEVELOPER_ERROR -> {
                         Log("Invalid arguments provided to the API." + " Response code: " + billingResult.responseCode)
                         billingEventListener?.onBillingError(ErrorType.DEVELOPER_ERROR)
 
                     }
+
                     BillingClient.BillingResponseCode.ERROR -> {
                         Log("Fatal error during the API action." + " Response code: " + billingResult.responseCode)
                         billingEventListener?.onBillingError(ErrorType.ERROR)
                     }
+
                     BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> {
                         Log("Failure to purchase since item is already owned." + " Response code: " + billingResult.responseCode)
                         billingEventListener?.onBillingError(ErrorType.ITEM_ALREADY_OWNED)
                     }
+
                     BillingClient.BillingResponseCode.ITEM_NOT_OWNED -> {
                         Log("Failure to consume since item is not owned." + " Response code: " + billingResult.responseCode)
                         billingEventListener?.onBillingError(ErrorType.ITEM_NOT_OWNED)
                     }
+
                     BillingClient.BillingResponseCode.SERVICE_DISCONNECTED, BillingClient.BillingResponseCode.SERVICE_TIMEOUT -> {
                         Log("Initialization error: service disconnected/timeout. Trying to reconnect...")
                         billingEventListener?.onBillingError(ErrorType.SERVICE_DISCONNECTED)
                     }
+
                     else -> {
                         Log("Initialization error: ")
                         billingEventListener?.onBillingError(ErrorType.ERROR)
                     }
                 }
             }
-            billingClient = BillingClient.newBuilder(context).setListener(purchasesUpdatedListener!!).enablePendingPurchases().build()
+            billingClient =
+                BillingClient.newBuilder(context).setListener(purchasesUpdatedListener!!)
+                    .enablePendingPurchases().build()
             startConnection()
         } else {
             Log("Client already connected")
@@ -114,11 +125,15 @@ class FunSolBillingHelper(private val context: Context) {
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                     Log("Connected to Google Play")
                     isClientReady = true
-                    billingClientListener?.onClientReady()
                     fetchAvailableAllSubsProducts(subKeys)
                     fetchAvailableAllInAppProducts(inAppKeys)
                     CoroutineScope(Dispatchers.IO).launch {
                         fetchActivePurchases()
+                    }
+
+                    // callback with Main thread because billing throw it in IO thread
+                    CoroutineScope(Dispatchers.Main).launch {
+                        billingClientListener?.onClientReady()
                     }
 
                 }
@@ -126,8 +141,12 @@ class FunSolBillingHelper(private val context: Context) {
 
             override fun onBillingServiceDisconnected() {
                 Log("Fail to connect with Google Play")
-                billingClientListener?.onClientInitError()
                 isClientReady = false
+
+                // callback with Main thread because billing throw it in IO thread
+                CoroutineScope(Dispatchers.Main).launch {
+                    billingClientListener?.onClientInitError()
+                }
             }
         })
     }
@@ -138,9 +157,13 @@ class FunSolBillingHelper(private val context: Context) {
 
         productListKeys.forEach {
             Log("keys List ${productListKeys.size} $it")
-            productList.add(QueryProductDetailsParams.Product.newBuilder().setProductId(it).setProductType(BillingClient.ProductType.SUBS).build())
+            productList.add(
+                QueryProductDetailsParams.Product.newBuilder().setProductId(it)
+                    .setProductType(BillingClient.ProductType.SUBS).build()
+            )
         }
-        val queryProductDetailsParams = QueryProductDetailsParams.newBuilder().setProductList(productList).build()
+        val queryProductDetailsParams =
+            QueryProductDetailsParams.newBuilder().setProductList(productList).build()
 
         if (billingClient != null) {
             billingClient!!.queryProductDetailsAsync(queryProductDetailsParams) { billingResult, productDetailsList ->
@@ -164,10 +187,12 @@ class FunSolBillingHelper(private val context: Context) {
             if (productInfo != null) {
                 val productDetailsParamsList = ArrayList<BillingFlowParams.ProductDetailsParams>()
                 if (productInfo.productType == BillingClient.ProductType.SUBS && productInfo.subscriptionOfferDetails != null) {
-                    val offerToken = getOfferToken(productInfo.subscriptionOfferDetails, productId, offerId)
+                    val offerToken =
+                        getOfferToken(productInfo.subscriptionOfferDetails, productId, offerId)
                     if (offerToken.trim { it <= ' ' } != "") {
                         productDetailsParamsList.add(
-                            BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productInfo).setOfferToken(offerToken).build()
+                            BillingFlowParams.ProductDetailsParams.newBuilder()
+                                .setProductDetails(productInfo).setOfferToken(offerToken).build()
                         )
                     } else {
                         billingEventListener?.onBillingError(ErrorType.OFFER_NOT_EXIST)
@@ -176,10 +201,12 @@ class FunSolBillingHelper(private val context: Context) {
                     }
                 } else {
                     productDetailsParamsList.add(
-                        BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productInfo).build()
+                        BillingFlowParams.ProductDetailsParams.newBuilder()
+                            .setProductDetails(productInfo).build()
                     )
                 }
-                val billingFlowParams = BillingFlowParams.newBuilder().setProductDetailsParamsList(productDetailsParamsList).build()
+                val billingFlowParams = BillingFlowParams.newBuilder()
+                    .setProductDetailsParamsList(productDetailsParamsList).build()
                 billingClient!!.launchBillingFlow(activity, billingFlowParams)
             } else {
                 billingEventListener?.onBillingError(ErrorType.PRODUCT_NOT_EXIST)
@@ -191,19 +218,31 @@ class FunSolBillingHelper(private val context: Context) {
         }
     }
 
-    fun upgradeOrDowngradeSubscription(activity: Activity, updateProductId: String, updateOfferId: String, OldProductID: String, policy: Int) {
+    fun upgradeOrDowngradeSubscription(
+        activity: Activity,
+        updateProductId: String,
+        updateOfferId: String,
+        OldProductID: String,
+        policy: Int
+    ) {
 
         if (billingClient != null) {
-            val productInfo = getProductDetail(updateProductId, updateOfferId, BillingClient.ProductType.SUBS)
+            val productInfo =
+                getProductDetail(updateProductId, updateOfferId, BillingClient.ProductType.SUBS)
             if (productInfo != null) {
                 val oldToken = getOldPurchaseToken(OldProductID)
                 if (oldToken.trim().isNotEmpty()) {
-                    val productDetailsParamsList = ArrayList<BillingFlowParams.ProductDetailsParams>()
+                    val productDetailsParamsList =
+                        ArrayList<BillingFlowParams.ProductDetailsParams>()
                     if (productInfo.productType == BillingClient.ProductType.SUBS && productInfo.subscriptionOfferDetails != null) {
-                        val offerToken = getOfferToken(productInfo.subscriptionOfferDetails, updateProductId, updateOfferId)
+                        val offerToken = getOfferToken(
+                            productInfo.subscriptionOfferDetails, updateProductId, updateOfferId
+                        )
                         if (offerToken.trim { it <= ' ' } != "") {
                             productDetailsParamsList.add(
-                                BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productInfo).setOfferToken(offerToken).build()
+                                BillingFlowParams.ProductDetailsParams.newBuilder()
+                                    .setProductDetails(productInfo).setOfferToken(offerToken)
+                                    .build()
                             )
                         } else {
                             billingEventListener?.onBillingError(ErrorType.OFFER_NOT_EXIST)
@@ -212,12 +251,17 @@ class FunSolBillingHelper(private val context: Context) {
                         }
                     } else {
                         productDetailsParamsList.add(
-                            BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productInfo).build()
+                            BillingFlowParams.ProductDetailsParams.newBuilder()
+                                .setProductDetails(productInfo).build()
                         )
                     }
-                    val billingFlowParams = BillingFlowParams.newBuilder().setProductDetailsParamsList(productDetailsParamsList).setSubscriptionUpdateParams(
-                        BillingFlowParams.SubscriptionUpdateParams.newBuilder().setOldPurchaseToken(oldToken).setReplaceProrationMode(policy).build()
-                    ).build()
+                    val billingFlowParams = BillingFlowParams.newBuilder()
+                        .setProductDetailsParamsList(productDetailsParamsList)
+                        .setSubscriptionUpdateParams(
+                            BillingFlowParams.SubscriptionUpdateParams.newBuilder()
+                                .setOldPurchaseToken(oldToken).setReplaceProrationMode(policy)
+                                .build()
+                        ).build()
                     billingClient!!.launchBillingFlow(activity, billingFlowParams)
                 } else {
                     Log("old purchase token not found")
@@ -253,7 +297,11 @@ class FunSolBillingHelper(private val context: Context) {
         return ""
     }
 
-    private fun getOfferToken(offerList: List<ProductDetails.SubscriptionOfferDetails>?, productId: String, offerId: String): String {
+    private fun getOfferToken(
+        offerList: List<ProductDetails.SubscriptionOfferDetails>?,
+        productId: String,
+        offerId: String
+    ): String {
         for (product in offerList!!) {
             if (product.offerId != null && product.offerId == offerId && product.basePlanId == productId) {
                 return product.offerToken
@@ -296,7 +344,8 @@ class FunSolBillingHelper(private val context: Context) {
 
     fun areSubscriptionsSupported(): Boolean {
         return if (billingClient != null) {
-            val responseCode = billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
+            val responseCode =
+                billingClient!!.isFeatureSupported(BillingClient.FeatureType.SUBSCRIPTIONS)
             responseCode.responseCode == BillingClient.BillingResponseCode.OK
         } else {
             Log("billing client null while check subscription support ")
@@ -308,7 +357,8 @@ class FunSolBillingHelper(private val context: Context) {
 
     fun unsubscribe(activity: Activity, SubId: String) {
         try {
-            val subscriptionUrl = "http://play.google.com/store/account/subscriptions?package=" + activity.packageName + "&sku=" + SubId
+            val subscriptionUrl =
+                "http://play.google.com/store/account/subscriptions?package=" + activity.packageName + "&sku=" + SubId
             val intent = Intent()
             intent.action = Intent.ACTION_VIEW
             intent.data = Uri.parse(subscriptionUrl)
@@ -328,9 +378,12 @@ class FunSolBillingHelper(private val context: Context) {
             val productInfo = getProductDetail(productId, "", BillingClient.ProductType.INAPP)
             if (productInfo != null) {
                 val productDetailsParamsList = listOf(
-                    BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(productInfo).build()
+                    BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(productInfo).build()
                 )
-                val billingFlowParams = BillingFlowParams.newBuilder().setProductDetailsParamsList(productDetailsParamsList).setIsOfferPersonalized(isPersonalizedOffer).build()
+                val billingFlowParams = BillingFlowParams.newBuilder()
+                    .setProductDetailsParamsList(productDetailsParamsList)
+                    .setIsOfferPersonalized(isPersonalizedOffer).build()
 
                 billingClient!!.launchBillingFlow(activity, billingFlowParams)
                 Log("Buying IN-APP : $productId")
@@ -345,7 +398,8 @@ class FunSolBillingHelper(private val context: Context) {
     }
 
     private suspend fun fetchActiveInAppPurchasesHistory() {
-        val params = QueryPurchaseHistoryParams.newBuilder().setProductType(BillingClient.ProductType.INAPP)
+        val params =
+            QueryPurchaseHistoryParams.newBuilder().setProductType(BillingClient.ProductType.INAPP)
         billingClient!!.queryPurchaseHistoryAsync(params.build()) { billingResult, purchases ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
                 Log("in-APP History item already buy founded list size ${purchases?.size}")
@@ -365,9 +419,13 @@ class FunSolBillingHelper(private val context: Context) {
 
         productListKeys.forEach {
             Log("in-App keys List ${productListKeys.size} $it")
-            productList.add(QueryProductDetailsParams.Product.newBuilder().setProductId(it).setProductType(BillingClient.ProductType.INAPP).build())
+            productList.add(
+                QueryProductDetailsParams.Product.newBuilder().setProductId(it)
+                    .setProductType(BillingClient.ProductType.INAPP).build()
+            )
         }
-        val queryProductDetailsParams = QueryProductDetailsParams.newBuilder().setProductList(productList).build()
+        val queryProductDetailsParams =
+            QueryProductDetailsParams.newBuilder().setProductList(productList).build()
 
         if (billingClient != null) {
             billingClient!!.queryProductDetailsAsync(queryProductDetailsParams) { billingResult, productDetailsList ->
@@ -416,77 +474,12 @@ class FunSolBillingHelper(private val context: Context) {
 
     fun getAllProductPrices(): MutableList<ProductPriceInfo> {
         val priceList = mutableListOf<ProductPriceInfo>()
-        AllProducts.forEach {
-            if (it.productType == BillingClient.ProductType.INAPP) {
-                val productPrice = ProductPriceInfo()
-                productPrice.title = it.title
-                productPrice.type = it.productType
-                productPrice.subsKey = it.productId
-                productPrice.productBasePlanKey = ""
-                productPrice.productOfferKey = ""
-                productPrice.price = it.oneTimePurchaseOfferDetails?.formattedPrice.toString()
-                productPrice.duration = "lifeTime"
-                priceList.add(productPrice)
-            } else {
-                it.subscriptionOfferDetails?.forEach { subIt ->
-                    val productPrice = ProductPriceInfo()
-                    productPrice.title = it.title
-                    productPrice.type = it.productType
-                    productPrice.subsKey = it.productId
-                    productPrice.productBasePlanKey = subIt.basePlanId
-                    productPrice.productOfferKey = subIt.offerId.toString()
-                    productPrice.price = subIt.pricingPhases.pricingPhaseList.first().formattedPrice
-                    productPrice.duration = subIt.pricingPhases.pricingPhaseList.first().billingPeriod
-                    priceList.add(productPrice)
-                }
 
-            }
-        }
+        // Place try catch because billing internal class throw null pointer some time on ProductType
+        try {
+            AllProducts.forEach {
 
-        return priceList
-    }
-
-    fun getProductPriceByKey(BasePlanKey: String, offerKey: String): ProductPriceInfo? {
-        AllProducts.forEach {
-            if (it.productType == BillingClient.ProductType.SUBS) {
-                it.subscriptionOfferDetails?.forEach { subIt ->
-                    if (offerKey.trim().isNotEmpty()) {
-                        if (subIt.basePlanId == BasePlanKey && subIt.offerId == offerKey) {
-                            val productPrice = ProductPriceInfo()
-                            productPrice.title = it.title
-                            productPrice.type = it.productType
-                            productPrice.subsKey = it.productId
-                            productPrice.productBasePlanKey = subIt.basePlanId
-                            productPrice.productOfferKey = subIt.offerId.toString()
-                            productPrice.price = subIt.pricingPhases.pricingPhaseList.first().formattedPrice
-                            productPrice.duration = subIt.pricingPhases.pricingPhaseList.first().billingPeriod
-                            return productPrice
-                        }
-                    } else {
-                        if (subIt.basePlanId == BasePlanKey && subIt.offerId == null) {
-                            val productPrice = ProductPriceInfo()
-                            productPrice.title = it.title
-                            productPrice.type = it.productType
-                            productPrice.subsKey = it.productId
-                            productPrice.productBasePlanKey = subIt.basePlanId
-                            productPrice.productOfferKey = subIt.offerId.toString()
-                            productPrice.price = subIt.pricingPhases.pricingPhaseList.first().formattedPrice
-                            productPrice.duration = subIt.pricingPhases.pricingPhaseList.first().billingPeriod
-                            return productPrice
-                        }
-                    }
-                }
-            }
-        }
-        Log("Product Price not found because product is missing")
-        billingEventListener?.onBillingError(ErrorType.PRODUCT_NOT_EXIST)
-        return null
-    }
-
-    fun getProductPriceByKey(productKey: String): ProductPriceInfo? {
-        AllProducts.forEach {
-            if (it.productType == BillingClient.ProductType.INAPP) {
-                if (it.productId == productKey) {
+                if (it.productType == BillingClient.ProductType.INAPP) {
                     val productPrice = ProductPriceInfo()
                     productPrice.title = it.title
                     productPrice.type = it.productType
@@ -495,9 +488,106 @@ class FunSolBillingHelper(private val context: Context) {
                     productPrice.productOfferKey = ""
                     productPrice.price = it.oneTimePurchaseOfferDetails?.formattedPrice.toString()
                     productPrice.duration = "lifeTime"
-                    return productPrice
+                    priceList.add(productPrice)
+                } else {
+                    it.subscriptionOfferDetails?.forEach { subIt ->
+                        val productPrice = ProductPriceInfo()
+                        productPrice.title = it.title
+                        productPrice.type = it.productType
+                        productPrice.subsKey = it.productId
+                        productPrice.productBasePlanKey = subIt.basePlanId
+                        productPrice.productOfferKey = subIt.offerId.toString()
+                        productPrice.price =
+                            subIt.pricingPhases.pricingPhaseList.first().formattedPrice
+                        productPrice.duration =
+                            subIt.pricingPhases.pricingPhaseList.first().billingPeriod
+                        priceList.add(productPrice)
+                    }
+
                 }
             }
+        } catch (e: java.lang.Exception) {
+            return mutableListOf()
+        } catch (e: Exception) {
+            return mutableListOf()
+        }
+
+        return priceList
+    }
+
+    fun getProductPriceByKey(BasePlanKey: String, offerKey: String): ProductPriceInfo? {
+        // Place try catch because billing internal class throw null pointer some time on ProductType
+        try {
+            AllProducts.forEach {
+                if (it.productType == BillingClient.ProductType.SUBS) {
+                    it.subscriptionOfferDetails?.forEach { subIt ->
+                        if (offerKey.trim().isNotEmpty()) {
+                            if (subIt.basePlanId == BasePlanKey && subIt.offerId == offerKey) {
+                                val productPrice = ProductPriceInfo()
+                                productPrice.title = it.title
+                                productPrice.type = it.productType
+                                productPrice.subsKey = it.productId
+                                productPrice.productBasePlanKey = subIt.basePlanId
+                                productPrice.productOfferKey = subIt.offerId.toString()
+                                productPrice.price =
+                                    subIt.pricingPhases.pricingPhaseList.first().formattedPrice
+                                productPrice.duration =
+                                    subIt.pricingPhases.pricingPhaseList.first().billingPeriod
+                                return productPrice
+                            }
+                        } else {
+                            if (subIt.basePlanId == BasePlanKey && subIt.offerId == null) {
+                                val productPrice = ProductPriceInfo()
+                                productPrice.title = it.title
+                                productPrice.type = it.productType
+                                productPrice.subsKey = it.productId
+                                productPrice.productBasePlanKey = subIt.basePlanId
+                                productPrice.productOfferKey = subIt.offerId.toString()
+                                productPrice.price =
+                                    subIt.pricingPhases.pricingPhaseList.first().formattedPrice
+                                productPrice.duration =
+                                    subIt.pricingPhases.pricingPhaseList.first().billingPeriod
+                                return productPrice
+                            }
+                        }
+                    }
+                }
+
+            }
+        } catch (e: java.lang.Exception) {
+            ///leave blank because below code auto handle this
+        } catch (e: Exception) {
+            ///leave blank because below code auto handle this
+        }
+        Log("Product Price not found because product is missing")
+        billingEventListener?.onBillingError(ErrorType.PRODUCT_NOT_EXIST)
+        return null
+    }
+
+    fun getProductPriceByKey(productKey: String): ProductPriceInfo? {
+        // Place try catch because billing internal class throw null pointer some time on ProductType
+        try {
+            AllProducts.forEach {
+                if (it.productType == BillingClient.ProductType.INAPP) {
+                    if (it.productId == productKey) {
+                        val productPrice = ProductPriceInfo()
+                        productPrice.title = it.title
+                        productPrice.type = it.productType
+                        productPrice.subsKey = it.productId
+                        productPrice.productBasePlanKey = ""
+                        productPrice.productOfferKey = ""
+                        productPrice.price =
+                            it.oneTimePurchaseOfferDetails?.formattedPrice.toString()
+                        productPrice.duration = "lifeTime"
+                        return productPrice
+                    }
+                }
+
+            }
+        } catch (e: java.lang.Exception) {
+            ///leave blank because below code auto handle this
+        } catch (e: Exception) {
+            ///leave blank because below code auto handle this
         }
         Log("IN-APP Product Price not found because product is missing")
         billingEventListener?.onBillingError(ErrorType.PRODUCT_NOT_EXIST)
@@ -510,13 +600,18 @@ class FunSolBillingHelper(private val context: Context) {
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
                 if (!purchase.isAcknowledged) {
 
-                    val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder().setPurchaseToken(purchase.purchaseToken)
+                    val acknowledgePurchaseParams = AcknowledgePurchaseParams.newBuilder()
+                        .setPurchaseToken(purchase.purchaseToken)
                     billingClient!!.acknowledgePurchase(acknowledgePurchaseParams.build()) {
                         if (it.responseCode == BillingClient.BillingResponseCode.OK) {
                             if (productType.trim().isNotEmpty()) {
                                 if (productType == BillingClient.ProductType.INAPP) {
                                     Log("IN-APP item buy after acknowledge ")
-                                    purchasedInAppProductList.add(PurchaseHistoryRecord(purchase.originalJson, purchase.signature))
+                                    purchasedInAppProductList.add(
+                                        PurchaseHistoryRecord(
+                                            purchase.originalJson, purchase.signature
+                                        )
+                                    )
                                 } else {
                                     Log("SUBS item buy after acknowledge ")
                                     purchasedProductList.add(purchase)
@@ -541,7 +636,9 @@ class FunSolBillingHelper(private val context: Context) {
                     if (consumeAbleKeys.contains(purchase.products.first())) {
                         Log("this purchase is consumable")
 
-                        val consumeParams = ConsumeParams.newBuilder().setPurchaseToken(purchase.purchaseToken).build()
+                        val consumeParams =
+                            ConsumeParams.newBuilder().setPurchaseToken(purchase.purchaseToken)
+                                .build()
                         billingClient?.consumeAsync(consumeParams) { result, str ->
                             if (result.responseCode == BillingClient.BillingResponseCode.OK) {
                                 Log("Purchase consumed")
@@ -579,7 +676,10 @@ class FunSolBillingHelper(private val context: Context) {
 
     private suspend fun fetchActiveSubsPurchases() {
         if (billingClient != null) {
-            billingClient!!.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { billingResult: BillingResult, purchases: List<Purchase> ->
+            billingClient!!.queryPurchasesAsync(
+                QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS)
+                    .build()
+            ) { billingResult: BillingResult, purchases: List<Purchase> ->
 
 
                 Log("BillingResult $billingResult")
@@ -600,7 +700,8 @@ class FunSolBillingHelper(private val context: Context) {
                 }
             }
             billingClient!!.queryPurchasesAsync(
-                QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()
+                QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP)
+                    .build()
             ) { billingResult: BillingResult, purchases: List<Purchase> ->
 
 
@@ -626,7 +727,9 @@ class FunSolBillingHelper(private val context: Context) {
         }
     }
 
-    fun getProductDetail(productKey: String, offerKey: String = "", productType: String): ProductDetails? {
+    fun getProductDetail(
+        productKey: String, offerKey: String = "", productType: String
+    ): ProductDetails? {
         val offerKeyNew = if (offerKey.trim().isNotEmpty()) {
             offerKey
         } else {
@@ -641,7 +744,10 @@ class FunSolBillingHelper(private val context: Context) {
                     }
                 } else {
                     it.subscriptionOfferDetails?.forEach { subDetails ->
-                        if (subDetails.basePlanId.equals(productKey, true) && subDetails.offerId.toString().equals(offerKeyNew, true)) {
+                        if (subDetails.basePlanId.equals(
+                                productKey, true
+                            ) && subDetails.offerId.toString().equals(offerKeyNew, true)
+                        ) {
                             Log("sub product detail ${subDetails.basePlanId}==  $productKey   =====> ${subDetails.offerId}==$offerKeyNew")
                             return it
                         } else {
@@ -680,22 +786,14 @@ class FunSolBillingHelper(private val context: Context) {
         return isClientReady
     }
 
-    fun enableLogging(isEnableWhileRelease: Boolean = false): FunSolBillingHelper {
-        enableLog = true
-        enableLogWhileRelease = isEnableWhileRelease
+    fun enableLogging(isEnableLog: Boolean = true): FunSolBillingHelper {
+        enableLog = isEnableLog
         return this
     }
 
     private fun Log(debugMessage: String) {
-
         if (enableLog) {
-            if (enableLogWhileRelease) {
-                Log.d(TAG, debugMessage)
-            } else {
-                if (BuildConfig.DEBUG) {
-                    Log.d(TAG, debugMessage)
-                }
-            }
+            Log.d(TAG, debugMessage)
         }
     }
 
