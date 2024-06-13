@@ -35,11 +35,12 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    namespace 'com.funsol.iap.billing'
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.android.billingclient:billing:6.0.1'
+    implementation 'com.android.billingclient:billing:7.0.0'
 }
 
 afterEvaluate {
@@ -49,13 +50,13 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.Funsol-Projects'
                 artifactId = 'Funsol-Billing-Helper'
-                version = 'v1.0.4'
+                version = 'v1.0.5'
             }
             debug(MavenPublication) {
                 from components.debug
                 groupId = 'com.github.Funsol-Projects'
                 artifactId = 'Funsol-Billing-Helper'
-                version = 'v1.0.4'
+                version = 'v1.0.5'
             }
         }
     }

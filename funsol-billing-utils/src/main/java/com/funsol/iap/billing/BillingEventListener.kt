@@ -9,4 +9,5 @@ interface BillingEventListener {
     fun onPurchaseAcknowledged(purchase: Purchase)
     fun onPurchaseConsumed(purchase: Purchase)
     fun onBillingError(error: ErrorType)
+
 }

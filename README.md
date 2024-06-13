@@ -2,11 +2,11 @@
 
 [![](https://jitpack.io/v/Funsol-Projects/Funsol-Billing-Helper.svg)](https://jitpack.io/#Funsol-Projects/Funsol-Billing-Helper)
 
-Funsol Billing Helper is a simple, straight-forward implementation of the Android v6.0 In-app billing API
+Funsol Billing Helper is a simple, straight-forward implementation of the Android v7.0 In-app billing API
 
 > Support both IN-App and Subscriptions.
 
-### **Billing v6 subscription model:**
+### **Billing v7 subscription model:**
 
 ![Subcription](https://user-images.githubusercontent.com/106656179/227849820-8b9e8566-fa6e-40d4-862e-77aaeaa65e6c.png)
 
@@ -37,7 +37,7 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 ```kotlin
 
 dependencies {
-  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.4'
+  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.5'
 }
 
 ```  
@@ -82,13 +82,17 @@ Call this in first stable activity or in App class
     .setInAppKeys(mutableListOf("In-App Key"))
     .enableLogging()
 	.setBillingClientListener(object : BillingClientListener {
-            override fun onClientReady() {
-                Log.i("billing", "onClientReady: ")
-            }
+      override fun onPurchasesUpdated() {
+        Log.i("billing", "onPurchasesUpdated: called when user latest premium status fetched ")
+      }
 
-            override fun onClientInitError() {
-                Log.i("billing", "onClientInitError: ")
-            }
+      override fun onClientReady() {
+        Log.i("billing", "onClientReady: Called when client ready after fetch products details and active product against user")
+      }
+
+      override fun onClientInitError() {
+        Log.i("billing", "onClientInitError: Called when client fail to init")
+      }
 
         })
 
