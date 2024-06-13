@@ -80,8 +80,7 @@ Call this in first stable activity or in App class
     FunSolBillingHelper(this)
     .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
     .setInAppKeys(mutableListOf("In-App Key"))
-    .enableLogging()
-	.setBillingClientListener(object : BillingClientListener {
+    .enableLogging().setBillingClientListener(object : BillingClientListener {
       override fun onPurchasesUpdated() {
         Log.i("billing", "onPurchasesUpdated: called when user latest premium status fetched ")
       }
@@ -400,7 +399,14 @@ This Method used for Releasing the client object and save from memory leaks
   - Set Logging for Release or Debug (By default only logs on debug mode)
   - Now initialize billing lib in App class (if you want)
   - Billing client ready check issue solved
-
+- 13-06-2024
+  - Billing library  updated to 7.0.0
+  - Threading consumption improved
+  - Billing client ready call back issue resolved
+  - Products price fetching issues resolved
+  - onPurchasesUpdated callback added to fetch updated premium status
+  - Proper logging implemented
+  - Price fetch missing related issues solved 
 
 ## License
 
