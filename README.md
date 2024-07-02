@@ -37,7 +37,7 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 ```kotlin
 
 dependencies {
-  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.5'
+  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.6'
 }
 
 ```  
@@ -50,6 +50,7 @@ Finally initialise Billing class and setup Subscription Ids
 
     FunSolBillingHelper(this)
     .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
+    .initialize()
  
 ```
 if both subscription and In-App
@@ -58,7 +59,8 @@ if both subscription and In-App
 
     FunSolBillingHelper(this)
     .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
-    .setInAppKeys(mutableListOf("In-App Key")) 
+    .setInAppKeys(mutableListOf("In-App Key"))
+    .initialize() 
   
 ```
 if consumable in-App
@@ -66,7 +68,8 @@ if consumable in-App
 
     FunSolBillingHelper(this)
     .setInAppKeys(mutableListOf("In-App Key, In-App consumable Key")) 
-	.setConsumableKeys(mutableListOf("In-App consumable Key")) 
+	.setConsumableKeys(mutableListOf("In-App consumable Key"))
+    .initialize() 
  
 ```
 **Note: you have add consumable key in both func ```setInAppKeys()``` and ```setConsumableKeys()```**
@@ -94,6 +97,7 @@ Call this in first stable activity or in App class
       }
 
         })
+    .initialize()
 
 
 ```
@@ -108,6 +112,7 @@ Call this in first stable activity or in App class
     .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
     .setInAppKeys(mutableListOf("In-App Key"))
     .enableLogging(isEnableLog = true)
+    .initialize()
 
 
 ```
@@ -406,7 +411,10 @@ This Method used for Releasing the client object and save from memory leaks
   - Products price fetching issues resolved
   - onPurchasesUpdated callback added to fetch updated premium status
   - Proper logging implemented
-  - Price fetch missing related issues solved 
+  - Price fetch missing related issues solved
+- 02-07-2024
+  - Must Call .initialize() after initial setup (Read documentation again for clarity)
+  - ProductList empty crash resolved
 
 ## License
 

@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
                     Log.i("billing", "onClientInitError: Called when client fail to init")
                 }
 
-            })
+            }).initialize()
 
     }
 }
