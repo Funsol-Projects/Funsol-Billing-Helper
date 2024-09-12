@@ -522,6 +522,8 @@ class FunSolBillingHelper(private val context: Context) {
                     productPrice.productBasePlanKey = ""
                     productPrice.productOfferKey = ""
                     productPrice.price = it.oneTimePurchaseOfferDetails?.formattedPrice.toString()
+                    productPrice.priceMicro = it.oneTimePurchaseOfferDetails?.priceAmountMicros ?: 0L
+                    productPrice.currencyCode = it.oneTimePurchaseOfferDetails?.priceCurrencyCode.toString()
                     productPrice.duration = "lifeTime"
                     priceList.add(productPrice)
                 } else {
@@ -534,6 +536,8 @@ class FunSolBillingHelper(private val context: Context) {
                         productPrice.productOfferKey = subIt.offerId.toString()
                         productPrice.price =
                             subIt.pricingPhases.pricingPhaseList.first().formattedPrice
+                        productPrice.priceMicro = subIt.pricingPhases.pricingPhaseList.first().priceAmountMicros ?: 0L
+                        productPrice.currencyCode = subIt.pricingPhases.pricingPhaseList.first().priceCurrencyCode.toString()
                         productPrice.duration =
                             subIt.pricingPhases.pricingPhaseList.first().billingPeriod
                         priceList.add(productPrice)
@@ -565,6 +569,8 @@ class FunSolBillingHelper(private val context: Context) {
                                 productPrice.productBasePlanKey = subIt.basePlanId
                                 productPrice.productOfferKey = subIt.offerId.toString()
                                 productPrice.price = subIt.pricingPhases.pricingPhaseList.first().formattedPrice
+                                productPrice.priceMicro = subIt.pricingPhases.pricingPhaseList.first().priceAmountMicros ?: 0L
+                                productPrice.currencyCode = subIt.pricingPhases.pricingPhaseList.first().priceCurrencyCode.toString()
                                 productPrice.duration = subIt.pricingPhases.pricingPhaseList.first().billingPeriod
                                 return productPrice
                             }
@@ -577,6 +583,8 @@ class FunSolBillingHelper(private val context: Context) {
                                 productPrice.productBasePlanKey = subIt.basePlanId
                                 productPrice.productOfferKey = subIt.offerId.toString()
                                 productPrice.price = subIt.pricingPhases.pricingPhaseList.first().formattedPrice
+                                productPrice.priceMicro = subIt.pricingPhases.pricingPhaseList.first().priceAmountMicros ?: 0L
+                                productPrice.currencyCode = subIt.pricingPhases.pricingPhaseList.first().priceCurrencyCode.toString()
                                 productPrice.duration = subIt.pricingPhases.pricingPhaseList.first().billingPeriod
                                 return productPrice
                             }
@@ -609,6 +617,9 @@ class FunSolBillingHelper(private val context: Context) {
                         productPrice.productOfferKey = ""
                         productPrice.price =
                             it.oneTimePurchaseOfferDetails?.formattedPrice.toString()
+
+                        productPrice.priceMicro = it.oneTimePurchaseOfferDetails?.priceAmountMicros ?: 0L
+                        productPrice.currencyCode = it.oneTimePurchaseOfferDetails?.priceCurrencyCode.toString()
                         productPrice.duration = "lifeTime"
                         return productPrice
                     }

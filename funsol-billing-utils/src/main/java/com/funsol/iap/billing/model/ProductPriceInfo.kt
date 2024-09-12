@@ -12,5 +12,7 @@ data class ProductPriceInfo(
     var type: String = "",
     var duration: String = "",
     var price: String = "",
+    var priceMicro: Long = 0L,
+    var currencyCode: String = "",
     var productCompleteInfo: ProductDetails? = null
 )
