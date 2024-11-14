@@ -1,4 +1,4 @@
-package com.funsol.iap.billing
+package com.funsol.iap.billing.listeners
 
 import com.android.billingclient.api.Purchase
 import com.funsol.iap.billing.model.ErrorType

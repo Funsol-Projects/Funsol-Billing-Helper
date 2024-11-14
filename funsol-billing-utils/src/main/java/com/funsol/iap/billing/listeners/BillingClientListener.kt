@@ -1,6 +1,4 @@
-package com.funsol.iap.billing
-
-import com.android.billingclient.api.Purchase
+package com.funsol.iap.billing.listeners
 
 interface BillingClientListener {
     fun onPurchasesUpdated()

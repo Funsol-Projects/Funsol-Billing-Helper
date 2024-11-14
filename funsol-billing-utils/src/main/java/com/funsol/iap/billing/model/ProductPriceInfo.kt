@@ -5,9 +5,9 @@ import com.android.billingclient.api.ProductDetails
 
 @Keep
 data class ProductPriceInfo(
-    var subsKey: String = "",
-    var productBasePlanKey: String = "",
-    var productOfferKey: String = "",
+    var productId: String = "",
+    var basePlanId: String = "",
+    var offerId: String = "",
     var title: String = "",
     var type: String = "",
     var duration: String = "",

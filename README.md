@@ -6,7 +6,7 @@ Funsol Billing Helper is a simple, straight-forward implementation of the Androi
 
 > Support both IN-App and Subscriptions.
 
-### **Billing v7 subscription model:**
+### **Billing v7.1.1 subscription model:**
 
 ![Subcription](https://user-images.githubusercontent.com/106656179/227849820-8b9e8566-fa6e-40d4-862e-77aaeaa65e6c.png)
 
@@ -37,7 +37,7 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 ```kotlin
 
 dependencies {
-  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v1.0.9'
+  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.0'
 }
 
 ```  
@@ -49,7 +49,7 @@ Finally initialise Billing class and setup Subscription Ids
 ```kotlin 
 
     FunSolBillingHelper(this)
-    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
+    .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
     .initialize()
  
 ```
@@ -58,8 +58,8 @@ if both subscription and In-App
 ```kotlin 
 
     FunSolBillingHelper(this)
-    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
-    .setInAppKeys(mutableListOf("In-App Key"))
+    .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
+    .setInAppProductIds(mutableListOf("In-App Product Id"))
     .initialize() 
   
 ```
@@ -67,12 +67,12 @@ if consumable in-App
 ```kotlin 
 
     FunSolBillingHelper(this)
-    .setInAppKeys(mutableListOf("In-App Key, In-App consumable Key")) 
-	.setConsumableKeys(mutableListOf("In-App consumable Key"))
+    .setInAppProductIds(mutableListOf("In-App Product Id, In-App consumable Product Id")) 
+	.setConsumableProductIds(mutableListOf("In-App consumable Product Id"))
     .initialize() 
  
 ```
-**Note: you have add consumable key in both func ```setInAppKeys()``` and ```setConsumableKeys()```**
+**Note: you have add consumable ProductIds in both func ```setInAppProductIds()``` and ```setConsumableProductIds()```**
 
 Call this in first stable activity or in App class
 
@@ -81,8 +81,8 @@ Call this in first stable activity or in App class
 ```kotlin
 
     FunSolBillingHelper(this)
-    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
-    .setInAppKeys(mutableListOf("In-App Key"))
+    .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
+    .setInAppProductIds(mutableListOf("In-App Product Id"))
     .enableLogging().setBillingClientListener(object : BillingClientListener {
       override fun onPurchasesUpdated() {
         Log.i("billing", "onPurchasesUpdated: called when user latest premium status fetched ")
@@ -109,8 +109,8 @@ Call this in first stable activity or in App class
 ```kotlin
 
     FunSolBillingHelper(this)
-    .setSubKeys(mutableListOf("Subs Key", "Subs Key 2"))
-    .setInAppKeys(mutableListOf("In-App Key"))
+    .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
+    .setInAppProductIds(mutableListOf("In-App Product Id"))
     .enableLogging(isEnableLog = true)
     .initialize()
 
@@ -121,7 +121,7 @@ Call this in first stable activity or in App class
 
 Subscribe to a Subscription
 ```kotlin
-    FunSolBillingHelper(this).buyInApp(activity,"In-App Key",false)
+    FunSolBillingHelper(this).buyInApp(activity,"In-App Product Id",false)
 ```
 ```fasle```  value used for **isPersonalizedOffer** attribute:
 
@@ -136,7 +136,7 @@ Subscribe to a Subscription
 ```
 Subscribe to a offer
 ```kotlin
-    FunSolBillingHelper(this).subscribe(activity, "Base Plan ID","Offer ID")
+    FunSolBillingHelper(this).subscribe(activity, "Base Plan ID", "Offer ID")
 ```
 
 **Note: it auto acknowledge the subscription and give callback when product acknowledged successfully.**
@@ -279,21 +279,21 @@ Get In-App Product price
 
 
 ```kotlin
-    FunSolBillingHelper(this).getProductPriceByKey("In-App Key").price
+    FunSolBillingHelper(this).getInAppProductPriceById("In-App Product Id").price
 ```
 
 Get specific subscription price (without offer)
 
 
 ```kotlin
-    FunSolBillingHelper(this).getProductPriceByKey("Base Plan ID","").price
+    FunSolBillingHelper(this).getSubscriptionProductPriceById("Base Plan ID").price
 ```
 
 Get specific subscription price (with offer)
 
 
 ```kotlin
-    FunSolBillingHelper(this).getProductPriceByKey("Base Plan ID","Offer ID").price
+    FunSolBillingHelper(this).getSubscriptionProductPriceById("Base Plan ID", "Offer ID").price
 ```
 
 This method return ```ProductPriceInfo``` object that contain complete detail   about subscription. To get only price just call ```.Price```.
@@ -303,31 +303,41 @@ This method return ```ProductPriceInfo``` object that contain complete detail   
 For In-App Product
 
 ```kotlin
-    FunSolBillingHelper(this).getProductDetail("In-App Key","",BillingClient.ProductType.INAPP)
+    FunSolBillingHelper(this).getInAppProductDetail("In-App Product Id" ,BillingClient.ProductType.INAPP)
 ```
 For Subs Product
 
 ```kotlin
-    FunSolBillingHelper(this).getProductDetail("Base Plan ID","Offer ID",BillingClient.ProductType.SUBS)
+    FunSolBillingHelper(this).getSubscriptionProductDetail("Base Plan ID", "Offer ID",BillingClient.ProductType.SUBS)
 ```
 
 Above methods return ```ProductPriceInfo``` object that contain complete detail about Product.
 
 ## Step 5 (Check if any Product buy)
 
+### Check Premium
+
+This variable checks if the user currently holds a premium status through any active in-app or subscription purchase.
+
+ ```kotlin
+  FunSolBillingHelper(this).isPremiumUser
+
+ ``` 
+
+
 ### Check In-App
 
 For check if user buy any In-App Product
 
  ```kotlin
-  FunSolBillingHelper(this).isInAppPremiumUser()
+  FunSolBillingHelper(this).isInAppPremiumUser() : Boolean
 
  ``` 
 
 For check specific In-App Product
 
 ``` kotlin
-  FunSolBillingHelper(this).isInAppPremiumUserByInAppKey("In-App Key")
+  FunSolBillingHelper(this).isInAppPremiumUserByProductId("In-App Product Id") : Boolean
 
  ```
 
@@ -336,20 +346,20 @@ For check specific In-App Product
 For check if any subscription is subscribe
 
  ```kotlin
-  FunSolBillingHelper(this).isSubsPremiumUser()
+  FunSolBillingHelper(this).isSubsPremiumUser() : Boolean
 
  ``` 
 
 For check if any specific subscription is subscribe (by Base Plan ID)
 
 ``` kotlin
-  FunSolBillingHelper(this).isSubsPremiumUserByBasePlanKey("Base Plan ID")
+  FunSolBillingHelper(this).isSubsPremiumUserByBasePlanId("Base Plan ID") : Boolean
 
  ``` 
 For check if any specific subscription is subscribe (by Subscription ID)
 
 ``` kotlin
-  FunSolBillingHelper(this).isSubsPremiumUserBySubIDKey("Subscription ID")
+  FunSolBillingHelper(this).isSubsPremiumUserBySubProductID("Subscription Product ID") : Boolean
 
  ``` 
 
@@ -358,31 +368,45 @@ For check if any specific subscription is subscribe (by Subscription ID)
 ### Cancel  Subscription
 
 ```kotlin
-FunSolBillingHelper(this).unsubscribe(this,"Subscription ID")
+FunSolBillingHelper(this).unsubscribe(this,"Subscription Product ID")
 ```
 
 ## Step 7 (Other Utils for Billing)
 
-### Handle pending purchases
+### Check Offer Availability
 
-to check and handle pending purchase call this below method on activity ```OnResume()``` method.
+Use this method to verify if a specific offer is available for a given base plan ID and offer ID.
 
 ```kotlin
-FunSolBillingHelper(this).fetchActivePurchases()
+FunSolBillingHelper(this).isOfferAvailable(basePlanId: String, offerId: String): Boolean
 ```
 
-**Note: Call this method in background thread. Use Coroutine to run this method in background.**
+### Check if User was Ever Premium
 
-### Check subscription support
+This method checks if the user has ever purchased any premium products or subscriptions.
 
 ```kotlin
-FunSolBillingHelper(this).areSubscriptionsSupported()
+FunSolBillingHelper(this).wasPremiumUser(): Boolean
+```
+
+### Retrieve Purchased Plans History
+
+Fetches the user's complete purchase history of premium products and subscriptions.
+
+```kotlin
+FunSolBillingHelper(this).getPurchasedPlansHistory(): List<PurchasedProduct>
+```
+
+###Check subscription support
+
+```kotlin
+FunSolBillingHelper(this).areSubscriptionsSupported() : Boolean
 
 ```
-### Check Billing Client is Ready
+###Check Billing Client is Ready
 
 ```kotlin
-FunSolBillingHelper(this).isClientReady()
+FunSolBillingHelper(this).isBillingClientReady()
 
 ```
 
@@ -418,11 +442,19 @@ This Method used for Releasing the client object and save from memory leaks
 - 12-09-2024
   - Micro Price variable added in product price info
   - price currency code added
-  - Bugs solved 
+  - Bugs solved
+- 13-11-2024
+  - isOfferAvailable(basePlanId, offerId): Checks if a specific offer is available for a given base plan ID and offer ID.
+  - wasPremiumUser(): Determines if the user has ever purchased a premium product or subscription.
+  - getPurchasedPlansHistory(): Fetches the user’s purchase history of premium products and subscriptions
+  - isPremiumUser: Checks the user’s current premium status based on active in-app purchases or subscriptions **(No need to maintain a separate SharedPreferences)**
+  - getInAppProductPriceById(inAppProductId): Retrieves price information for a specific in-app product.
+  - Improved error handling with clearer messages for unsupported products and missing purchase tokens.
+  - Refined logging to provide more informative output during billing operations.
 
 ## License
 
-#### MIT License 
+#### MIT License
 #### Copyright (c) 2023  Funsol Technologies Pvt Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and

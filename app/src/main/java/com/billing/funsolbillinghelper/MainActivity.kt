@@ -3,8 +3,8 @@ package com.billing.funsolbillinghelper
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import com.funsol.iap.billing.BillingClientListener
 import com.funsol.iap.billing.FunSolBillingHelper
+import com.funsol.iap.billing.listeners.BillingClientListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        FunSolBillingHelper(this).setInAppKeys(mutableListOf("android.test.purchase")).setSubKeys(mutableListOf("basic")).enableLogging(false)
+        FunSolBillingHelper(this).setInAppProductIds(mutableListOf("android.test.purchase")).setSubProductIds(mutableListOf("basic")).enableLogging(false)
             .setBillingClientListener(object : BillingClientListener {
                 override fun onPurchasesUpdated() {
                     Log.i("billing", "onPurchasesUpdated: called when user latest premium status fetched ")
