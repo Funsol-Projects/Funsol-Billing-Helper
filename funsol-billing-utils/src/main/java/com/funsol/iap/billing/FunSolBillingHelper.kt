@@ -86,8 +86,8 @@ class FunSolBillingHelper(private val context: Context) {
 						purchasesDeferred.await()
 						// Notify the listener on the Main thread
 						logFunsolBilling("Billing client is ready")
-						billingClientListener?.onClientReady()
 						updatePremiumStatus(context = context)
+						billingClientListener?.onClientReady()
 					}
 					
 				} else if (billingResult.responseCode == BillingClient.BillingResponseCode.BILLING_UNAVAILABLE) {
