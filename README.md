@@ -2,7 +2,7 @@
 
 [![](https://jitpack.io/v/Funsol-Projects/Funsol-Billing-Helper.svg)](https://jitpack.io/#Funsol-Projects/Funsol-Billing-Helper)
 
-Funsol Billing Helper is a simple, straight-forward implementation of the Android v7.0 In-app billing API
+Funsol Billing Helper is a simple, straight-forward implementation of the Android v7.1.1 In-app billing API
 
 > Support both IN-App and Subscriptions.
 
@@ -444,6 +444,7 @@ This Method used for Releasing the client object and save from memory leaks
   - price currency code added
   - Bugs solved
 - 13-11-2024
+  - Billing library  updated to 7.1.1
   - isOfferAvailable(basePlanId, offerId): Checks if a specific offer is available for a given base plan ID and offer ID.
   - wasPremiumUser(): Determines if the user has ever purchased a premium product or subscription.
   - getPurchasedPlansHistory(): Fetches the user’s purchase history of premium products and subscriptions
@@ -451,6 +452,9 @@ This Method used for Releasing the client object and save from memory leaks
   - getInAppProductPriceById(inAppProductId): Retrieves price information for a specific in-app product.
   - Improved error handling with clearer messages for unsupported products and missing purchase tokens.
   - Refined logging to provide more informative output during billing operations.
+  - Billing client ready call back issue resolved **(Now Exactly call after billing all setup finish)**
+  - Code optimized 
+  - Bugs solved
 
 ## License
 
