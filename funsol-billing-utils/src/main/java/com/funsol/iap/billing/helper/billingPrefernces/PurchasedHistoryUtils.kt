@@ -13,10 +13,6 @@ class PurchasedHistoryUtils(private val context: Context) {
 	
 	suspend fun hasUserEverPurchased(): Boolean {
 		val db = PurchaseDatabase.getDatabase(context)
-		val products = db.purchaseDao().getAllPurchasedProducts()
-		products.forEach {
-			logFunsolBilling("PurchasedHistoryUtils = $it")
-		}
 		return db.purchaseDao().getAllPurchasedProducts().isNotEmpty()
 	}
 	

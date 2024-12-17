@@ -37,7 +37,7 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 ```kotlin
 
 dependencies {
-  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.1'
+  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.2'
 }
 
 ```  
@@ -455,6 +455,11 @@ This Method used for Releasing the client object and save from memory leaks
   - Billing client ready call back issue resolved **(Now Exactly call after billing all setup finish)**
   - Code optimized 
   - Bugs solved
+- 17-12-2024
+  - Offer purchase and Base Plan purchase conflict issue resolved
+  - Billing client release issue resolved
+  - Bugs resolved
+  - Introduced currency symbol in product info
 
 ## License
 

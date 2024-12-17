@@ -130,8 +130,10 @@ class FunSolBillingHelper(private val context: Context) {
 		client.queryProductDetailsAsync(queryProductDetailsParams) { billingResult, productDetailsList ->
 			if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
 				productDetailsList.forEach { productDetails ->
-					logFunsolBilling("Subscription product details: $productDetails")
-					allProducts.add(productDetails)
+					if (!allProducts.contains(productDetails)) {
+						logFunsolBilling("Subscription product details: $productDetails")
+						allProducts.add(productDetails)
+					}
 				}
 			} else {
 				logFunsolBilling("Failed to retrieve SUBS prices: ${billingResult.debugMessage}")
@@ -163,8 +165,10 @@ class FunSolBillingHelper(private val context: Context) {
 		client.queryProductDetailsAsync(queryProductDetailsParams) { billingResult, productDetailsList ->
 			if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
 				productDetailsList.forEach { productDetails ->
-					logFunsolBilling("In-app product details: $productDetails")
-					allProducts.add(productDetails)
+					if (!allProducts.contains(productDetails)) {
+						logFunsolBilling("In-app product details: $productDetails")
+						allProducts.add(productDetails)
+					}
 				}
 			} else {
 				logFunsolBilling("Failed to retrieve In-APP prices: ${billingResult.debugMessage}")
@@ -223,9 +227,6 @@ class FunSolBillingHelper(private val context: Context) {
 					BillingClient.BillingResponseCode.OK                                                                      -> {
 						purchases?.let {
 							for (purchase in it) {
-								logFunsolBilling("purchased --> $purchase")
-								logFunsolBilling("purchased First --> ${purchase.products.first()}")
-//								val productPriceInfo = getAllProductPrices().find { it.productId == purchase }
 								CoroutineScope(IO).launch {
 									lastPurchasedProduct?.let { originalProduct ->
 										val updatedProduct = originalProduct.copy(orderId = purchase.orderId)
@@ -485,10 +486,15 @@ class FunSolBillingHelper(private val context: Context) {
 	}
 	
 	fun release() {
-		if (billingClient != null && billingClient!!.isReady) {
+		billingClient?.takeIf { it.isReady }?.apply {
 			logFunsolBilling("BillingHelper instance release: ending connection...")
-			billingClient?.endConnection()
+			endConnection()
 		}
+		consumeAbleProductIds.clear()
+		purchasedSubsProductList.clear()
+		purchasedInAppProductList.clear()
+		allProducts.clear()
+		billingClient = null
 	}
 	
 	fun setBillingEventListener(billingEventListeners: BillingEventListener?): FunSolBillingHelper {

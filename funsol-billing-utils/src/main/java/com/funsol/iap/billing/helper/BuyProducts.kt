@@ -84,7 +84,8 @@ class BuyProducts {
 						type = productInfo.productType,
 						price = productPriceInfo.price,
 						priceMicro = productPriceInfo.priceMicro,
-						currencyCode = productPriceInfo.currencyCode)
+						currencyCode = productPriceInfo.currencyCode,
+						currencySymbol = productPriceInfo.currencySymbol)
 				}
 				
 			} else {
