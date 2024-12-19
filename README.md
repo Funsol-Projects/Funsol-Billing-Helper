@@ -37,7 +37,7 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 ```kotlin
 
 dependencies {
-  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.2'
+  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.3'
 }
 
 ```  
@@ -460,6 +460,8 @@ This Method used for Releasing the client object and save from memory leaks
   - Billing client release issue resolved
   - Bugs resolved
   - Introduced currency symbol in product info
+- 19-12-2024
+  - Bugs resolved
 
 ## License
 

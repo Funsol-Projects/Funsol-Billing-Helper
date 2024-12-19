@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Google Play Billing Library
+-keep class com.android.billingclient.** { *; }
+-keepclassmembers class com.android.billingclient.** { *; }
+-dontwarn com.android.billingclient.**
