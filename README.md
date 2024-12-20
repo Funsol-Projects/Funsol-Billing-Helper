@@ -462,6 +462,8 @@ This Method used for Releasing the client object and save from memory leaks
   - Introduced currency symbol in product info
 - 19-12-2024
   - Bugs resolved
+- 20-12-2024
+  - Downgrade to 7.0.0
 
 ## License
 
