@@ -26,6 +26,7 @@ import com.funsol.iap.billing.helper.billingPrefernces.BillingSharedPrefsManager
 import com.funsol.iap.billing.helper.billingPrefernces.PurchasedHistoryUtils
 import com.funsol.iap.billing.helper.billingPrefernces.PurchasedProduct
 import com.funsol.iap.billing.helper.logFunsolBilling
+import com.funsol.iap.billing.helper.toFunsolPurchases
 import com.funsol.iap.billing.listeners.BillingClientListener
 import com.funsol.iap.billing.listeners.BillingEventListener
 import com.funsol.iap.billing.model.ErrorType
@@ -235,7 +236,7 @@ class FunSolBillingHelper(private val context: Context) {
 									buyProducts.handlePurchase(purchase = purchase)
 								}
 							}
-							billingEventListener?.onProductsPurchased(purchasedSubsProductList)
+							billingEventListener?.onProductsPurchased(purchasedSubsProductList.toFunsolPurchases())
 						}
 					}
 					

@@ -32,6 +32,5 @@ data class PurchasedProduct(
     @ColumnInfo(name = "price") var price: String? = null,
     @ColumnInfo(name = "price_micro") var priceMicro: Long? = null,
     @ColumnInfo(name = "currency_code") var currencyCode: String? = null,
-    @ColumnInfo(name = "currency_symbol") var currencySymbol: String? = null,
     @ColumnInfo(name = "purchase_time") var purchaseTime: Long = System.currentTimeMillis(),
 )

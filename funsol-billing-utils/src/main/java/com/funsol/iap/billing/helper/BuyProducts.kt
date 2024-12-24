@@ -84,8 +84,7 @@ class BuyProducts {
 						type = productInfo.productType,
 						price = productPriceInfo.price,
 						priceMicro = productPriceInfo.priceMicro,
-						currencyCode = productPriceInfo.currencyCode,
-						currencySymbol = productPriceInfo.currencySymbol)
+						currencyCode = productPriceInfo.currencyCode)
 				}
 				
 			} else {
@@ -210,7 +209,7 @@ class BuyProducts {
 					else                            -> logFunsolBilling("Unknown product type while acknowledging purchase")
 				}
 				billingClientListener?.onPurchasesUpdated()
-				billingEventListener?.onPurchaseAcknowledged(purchase)
+				billingEventListener?.onPurchaseAcknowledged(purchase.toFunsolPurchase())
 			} else {
 				logFunsolBilling("Acknowledge error: ${result.debugMessage} (code: ${result.responseCode})")
 				billingEventListener?.onBillingError(ErrorType.ACKNOWLEDGE_ERROR)
@@ -236,7 +235,7 @@ class BuyProducts {
 		billingClient.consumeAsync(consumeParams) { result, _ ->
 			if (result.responseCode == BillingClient.BillingResponseCode.OK) {
 				logFunsolBilling("Purchase consumed")
-				billingEventListener?.onPurchaseConsumed(purchase)
+				billingEventListener?.onPurchaseConsumed(purchase.toFunsolPurchase())
 			} else {
 				logFunsolBilling("Failed to consume purchase: ${result.debugMessage} (code: ${result.responseCode})")
 				billingEventListener?.onBillingError(ErrorType.CONSUME_ERROR)
