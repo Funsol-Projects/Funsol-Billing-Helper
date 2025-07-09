@@ -106,7 +106,10 @@ class FunSolBillingHelper(private val context: Context) {
         })
     }
 
-    private fun fetchAvailableAllSubsProducts(productIds: MutableList<String>, subsDeferred: CompletableDeferred<Unit>) {
+    private fun fetchAvailableAllSubsProducts(
+        productIds: MutableList<String>,
+        subsDeferred: CompletableDeferred<Unit>
+    ) {
         // Early return if billing client is null
         val client = billingClient ?: run {
             logFunsolBilling("Billing client null while fetching All Subscription Products")
@@ -127,9 +130,10 @@ class FunSolBillingHelper(private val context: Context) {
             .setProductList(productList)
             .build()
         // Query product details asynchronously
-        client.queryProductDetailsAsync(queryProductDetailsParams) { billingResult, productDetailsList ->
+        client.queryProductDetailsAsync(queryProductDetailsParams) { billingResult, queryProductDetailsList ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val newProducts = productDetailsList.filter { it !in allProducts }
+                val newProducts =
+                    queryProductDetailsList.productDetailsList.filter { it !in allProducts }
 
                 // Synchronizing access to allProducts
                 synchronized(allProducts) {
@@ -145,7 +149,10 @@ class FunSolBillingHelper(private val context: Context) {
         }
     }
 
-    private fun fetchAvailableAllInAppProducts(productIds: MutableList<String>, inAppDeferred: CompletableDeferred<Unit>) {
+    private fun fetchAvailableAllInAppProducts(
+        productIds: MutableList<String>,
+        inAppDeferred: CompletableDeferred<Unit>
+    ) {
         // Early return if billing client is null
         val client = billingClient ?: run {
             logFunsolBilling("Billing client null while fetching All In-App Products")
@@ -164,9 +171,10 @@ class FunSolBillingHelper(private val context: Context) {
             .setProductList(productList)
             .build()
 
-        client.queryProductDetailsAsync(queryProductDetailsParams) { billingResult, productDetailsList ->
+        client.queryProductDetailsAsync(queryProductDetailsParams) { billingResult, queryProductDetailsList ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val newProducts = productDetailsList.filter { it !in allProducts }
+                val newProducts =
+                    queryProductDetailsList.productDetailsList.filter { it !in allProducts }
 
                 // Synchronizing access to allProducts
                 synchronized(allProducts) {
@@ -196,7 +204,8 @@ class FunSolBillingHelper(private val context: Context) {
             val params = QueryPurchasesParams.newBuilder().setProductType(productType).build()
             billingClient.queryPurchasesAsync(params) { billingResult, purchases ->
                 if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                    val activePurchases = purchases.filter { it.purchaseState == Purchase.PurchaseState.PURCHASED }
+                    val activePurchases =
+                        purchases.filter { it.purchaseState == Purchase.PurchaseState.PURCHASED }
                     logFunsolBilling("${activePurchases.size} $productType purchases found")
 
                     activePurchases.forEach { purchase ->
@@ -235,9 +244,13 @@ class FunSolBillingHelper(private val context: Context) {
                             for (purchase in it) {
                                 CoroutineScope(IO).launch {
                                     lastPurchasedProduct?.let { originalProduct ->
-                                        val updatedProduct = originalProduct.copy(orderId = purchase.orderId)
+                                        val updatedProduct =
+                                            originalProduct.copy(orderId = purchase.orderId)
                                         purchasedHistoryUtils.recordPurchase(purchase = updatedProduct)
-                                        buyProducts.handlePurchase(purchase = purchase, productType = originalProduct.type ?: "")
+                                        buyProducts.handlePurchase(
+                                            purchase = purchase,
+                                            productType = originalProduct.type ?: ""
+                                        )
                                         updatePremiumStatus(context = context)
                                         billingClientListener?.onPurchasesUpdated()
                                     }
@@ -245,11 +258,15 @@ class FunSolBillingHelper(private val context: Context) {
                             }
                             when (lastPurchasedProduct?.type) {
                                 BillingClient.ProductType.SUBS -> {
-                                    billingEventListener?.onProductsPurchased(purchasedSubsProductList.toFunsolPurchases())
+                                    billingEventListener?.onProductsPurchased(
+                                        purchasedSubsProductList.toFunsolPurchases()
+                                    )
                                 }
 
                                 BillingClient.ProductType.INAPP -> {
-                                    billingEventListener?.onProductsPurchased(purchasedInAppProductList.toFunsolPurchases())
+                                    billingEventListener?.onProductsPurchased(
+                                        purchasedInAppProductList.toFunsolPurchases()
+                                    )
                                 }
 
                                 else -> {
@@ -315,8 +332,9 @@ class FunSolBillingHelper(private val context: Context) {
 
             billingClient = BillingClient.newBuilder(context)
                 .setListener(purchasesUpdatedListener!!)
-                .enablePendingPurchases().build()
-
+                .enablePendingPurchases(
+                    PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
+                ).build()
             startConnection()
         } else {
             billingClientListener?.onClientAllReadyConnected()
@@ -336,14 +354,22 @@ class FunSolBillingHelper(private val context: Context) {
         policy: Int
     ) {
         if (billingClient != null) {
-            val productInfo = productDetail.getProductDetail(updateProductId, updateOfferId, BillingClient.ProductType.SUBS)
+            val productInfo = productDetail.getProductDetail(
+                updateProductId,
+                updateOfferId,
+                BillingClient.ProductType.SUBS
+            )
             if (productInfo != null) {
                 val oldToken = getOldPurchaseToken(oldProductID)
                 if (oldToken.trim().isNotEmpty()) {
                     val productDetailsParamsList =
                         ArrayList<BillingFlowParams.ProductDetailsParams>()
                     if (productInfo.productType == BillingClient.ProductType.SUBS && productInfo.subscriptionOfferDetails != null) {
-                        val offerToken = productDetail.getOfferToken(productInfo.subscriptionOfferDetails, updateProductId, updateOfferId)
+                        val offerToken = productDetail.getOfferToken(
+                            productInfo.subscriptionOfferDetails,
+                            updateProductId,
+                            updateOfferId
+                        )
                         if (offerToken.trim { it <= ' ' } != "") {
                             productDetailsParamsList.add(
                                 BillingFlowParams.ProductDetailsParams.newBuilder()
@@ -453,7 +479,11 @@ class FunSolBillingHelper(private val context: Context) {
 
     //////////////////////////////////////////////////// In-App /////////////////////////////////////////////////////////////
     fun buyInApp(activity: Activity, productId: String, isPersonalizedOffer: Boolean = false) {
-        buyProducts.buyInApp(activity = activity, productId = productId, isPersonalizedOffer = isPersonalizedOffer)
+        buyProducts.buyInApp(
+            activity = activity,
+            productId = productId,
+            isPersonalizedOffer = isPersonalizedOffer
+        )
     }
 
     fun isInAppPremiumUser(): Boolean {
@@ -461,7 +491,8 @@ class FunSolBillingHelper(private val context: Context) {
     }
 
     private fun updatePremiumStatus(context: Context) {
-        val isPremium = FunSolBillingHelper(context).isInAppPremiumUser() || FunSolBillingHelper(context).isSubsPremiumUser()
+        val isPremium =
+            FunSolBillingHelper(context).isInAppPremiumUser() || FunSolBillingHelper(context).isSubsPremiumUser()
         billingSharedPrefsManager.setPremiumStatus(isPremium = isPremium)
     }
 
@@ -487,8 +518,14 @@ class FunSolBillingHelper(private val context: Context) {
         return productPrices.getAllProductPrices()
     }
 
-    fun getSubscriptionProductPriceById(basePlanId: String, offerId: String? = null): ProductPriceInfo? {
-        return productPrices.getSubscriptionProductPriceById(basePlanId = basePlanId, offerId = offerId)
+    fun getSubscriptionProductPriceById(
+        basePlanId: String,
+        offerId: String? = null
+    ): ProductPriceInfo? {
+        return productPrices.getSubscriptionProductPriceById(
+            basePlanId = basePlanId,
+            offerId = offerId
+        )
     }
 
     fun getInAppProductPriceById(inAppProductId: String): ProductPriceInfo? {
@@ -531,7 +568,10 @@ class FunSolBillingHelper(private val context: Context) {
     }
 
     fun isOfferAvailable(basePlanId: String, offerId: String): Boolean {
-        val offerPrice = productPrices.getSubscriptionProductPriceById(basePlanId = basePlanId, offerId = offerId)
+        val offerPrice = productPrices.getSubscriptionProductPriceById(
+            basePlanId = basePlanId,
+            offerId = offerId
+        )
         return offerPrice != null
     }
 
@@ -544,11 +584,23 @@ class FunSolBillingHelper(private val context: Context) {
     }
 
     fun getInAppProductDetail(productId: String, productType: String): ProductDetails? {
-        return productDetail.getProductDetail(productId = productId, offerId = null, productType = productType)
+        return productDetail.getProductDetail(
+            productId = productId,
+            offerId = null,
+            productType = productType
+        )
     }
 
-    fun getSubscriptionProductDetail(productId: String, offerId: String? = null, productType: String): ProductDetails? {
-        return productDetail.getProductDetail(productId = productId, offerId = offerId, productType = productType)
+    fun getSubscriptionProductDetail(
+        productId: String,
+        offerId: String? = null,
+        productType: String
+    ): ProductDetails? {
+        return productDetail.getProductDetail(
+            productId = productId,
+            offerId = offerId,
+            productType = productType
+        )
     }
 
     fun checkAndRetryForPurchaseAcknowledgement() {
