@@ -2,11 +2,11 @@
 
 [![](https://jitpack.io/v/Funsol-Projects/Funsol-Billing-Helper.svg)](https://jitpack.io/#Funsol-Projects/Funsol-Billing-Helper)
 
-Funsol Billing Helper is a simple, straight-forward implementation of the Android v7.1.1 In-app billing API
+Funsol Billing Helper is a simple, straight-forward implementation of the Android v8.0.0 In-app billing API
 
 > Support both IN-App and Subscriptions.
 
-### **Billing v7.1.1 subscription model:**
+### **Billing v8.0.0 subscription model:**
 
 ![Subcription](https://user-images.githubusercontent.com/106656179/227849820-8b9e8566-fa6e-40d4-862e-77aaeaa65e6c.png)
 
