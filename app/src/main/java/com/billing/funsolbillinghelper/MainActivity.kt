@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.util.Log
 import com.funsol.iap.billing.FunSolBillingHelper
 import com.funsol.iap.billing.listeners.BillingClientListener
+import com.funsol.iap.billing.listeners.BillingEventListener
+import com.funsol.iap.billing.model.ErrorType
+import com.funsol.iap.billing.model.FunsolPurchase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -53,6 +56,24 @@ class MainActivity : AppCompatActivity() {
 
                 }).initialize()
         }
+        FunSolBillingHelper(this@MainActivity).setBillingEventListener(object : BillingEventListener {
+            override fun onProductsPurchased(purchases: List<FunsolPurchase?>) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onPurchaseAcknowledged(purchase: FunsolPurchase) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onPurchaseConsumed(purchase: FunsolPurchase) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onBillingError(error: ErrorType) {
+                TODO("Not yet implemented")
+            }
+
+        })
 
 
     }
