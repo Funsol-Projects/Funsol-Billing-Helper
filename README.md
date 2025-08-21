@@ -12,16 +12,18 @@ Funsol Billing Helper is a simple, straight-forward implementation of the Androi
 
 ## Getting Started
 
-#### Dependencies
+#### Extra Dependencies
 
 ```kotlin
 
-  // Billing Client
-   implementation("com.android.billingclient:billing:8.0.0")
-  // Room DB
-   implementation("androidx.room:room-runtime:2.7.2")
-   implementation("androidx.room:room-ktx:2.7.2")
-   ksp("androidx.room:room-compiler:2.7.2")
+dependencies {
+    // Billing Client
+    implementation("com.android.billingclient:billing:8.0.0")
+    // Room DB
+    implementation("androidx.room:room-runtime:2.7.2")
+    implementation("androidx.room:room-ktx:2.7.2")
+    ksp("androidx.room:room-compiler:2.7.2")
+}
 
 
 ```  
