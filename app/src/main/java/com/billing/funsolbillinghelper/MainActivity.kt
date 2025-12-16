@@ -4,8 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import com.funsol.iap.billing.FunSolBillingHelper
-import com.funsol.iap.billing.listeners.BillingClientListener
-import com.funsol.iap.billing.listeners.BillingEventListener
+import com.funsol.iap.billing.listeners.BillingListener
 import com.funsol.iap.billing.model.ErrorType
 import com.funsol.iap.billing.model.FunsolPurchase
 import kotlinx.coroutines.CoroutineScope
@@ -21,10 +20,7 @@ class MainActivity : AppCompatActivity() {
 
 
             FunSolBillingHelper(this@MainActivity).setInAppProductIds(mutableListOf("android.test.purchase")).setSubProductIds(mutableListOf("basic")).enableLogging(false)
-                .setBillingClientListener(object : BillingClientListener {
-                    override fun onPurchasesUpdated() {
-                        Log.i("billing", "onPurchasesUpdated: called when user latest premium status fetched ")
-                    }
+                .setBillingListener(object : BillingListener {
 
                     override fun onClientReady() {
                         Log.i("billing", "onClientReady: Called when client ready after fetch products details and active product against user")
@@ -34,46 +30,21 @@ class MainActivity : AppCompatActivity() {
                         Log.i("billing", "onClientInitError: Called when client fail to init")
                     }
 
-                }).initialize()
-        }
+                    override fun onProductsPurchased(purchases: List<FunsolPurchase?>) {
 
-        CoroutineScope(Dispatchers.IO).launch {
-
-
-            FunSolBillingHelper(this@MainActivity).setInAppProductIds(mutableListOf("android.test.purchase")).setSubProductIds(mutableListOf("basic")).enableLogging(false)
-                .setBillingClientListener(object : BillingClientListener {
-                    override fun onPurchasesUpdated() {
-                        Log.i("billing", "onPurchasesUpdated: called when user latest premium status fetched ")
                     }
 
-                    override fun onClientReady() {
-                        Log.i("billing", "onClientReady: Called when client ready after fetch products details and active product against user")
+                    override fun onPurchaseAcknowledged(purchase: FunsolPurchase) {
                     }
 
-                    override fun onClientInitError() {
-                        Log.i("billing", "onClientInitError: Called when client fail to init")
+                    override fun onPurchaseConsumed(purchase: FunsolPurchase) {
+                    }
+
+                    override fun onBillingError(error: ErrorType) {
                     }
 
                 }).initialize()
         }
-        FunSolBillingHelper(this@MainActivity).setBillingEventListener(object : BillingEventListener {
-            override fun onProductsPurchased(purchases: List<FunsolPurchase?>) {
-                TODO("Not yet implemented")
-            }
-
-            override fun onPurchaseAcknowledged(purchase: FunsolPurchase) {
-                TODO("Not yet implemented")
-            }
-
-            override fun onPurchaseConsumed(purchase: FunsolPurchase) {
-                TODO("Not yet implemented")
-            }
-
-            override fun onBillingError(error: ErrorType) {
-                TODO("Not yet implemented")
-            }
-
-        })
 
 
     }

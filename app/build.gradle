@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.billing.funsolbillinghelper"
-        minSdk 21
+        minSdk 23
         targetSdk 35
         versionCode 1
         versionName "1.0"
@@ -41,8 +41,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    implementation 'com.android.billingclient:billing:8.0.0'
-    implementation(files("libs/funsol-billing-release.aar"))
+    implementation 'com.android.billingclient:billing:8.2.0'
+    implementation(files("libs/FunsolBillingLibrary-release.aar"))
 
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }
@@ -53,9 +53,9 @@ afterEvaluate {
             release(MavenPublication) {
                 groupId = "com.github.Funsol-Projects"
                 artifactId = "Funsol-Billing-Helper"
-                version = "2.0.7"
+                version = "2.0.8"
 
-                artifact(file("libs/funsol-billing-release.aar")) {
+                artifact(file("libs/FunsolBillingLibrary-release.aar")) {
                     extension = "aar"
                 }
             }

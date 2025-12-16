@@ -2,11 +2,11 @@
 
 [![](https://jitpack.io/v/Funsol-Projects/Funsol-Billing-Helper.svg)](https://jitpack.io/#Funsol-Projects/Funsol-Billing-Helper)
 
-Funsol Billing Helper is a simple, straight-forward implementation of the Android v8.0.0 In-app billing API
+Funsol Billing Helper is a simple, straight-forward wrapper for Google Play Billing (billing-ktx 8.2.0).
 
 > Support both IN-App and Subscriptions.
 
-### **Billing v8.0.0 subscription model:**
+### **Billing subscription model:**
 
 ![Subcription](https://user-images.githubusercontent.com/106656179/227849820-8b9e8566-fa6e-40d4-862e-77aaeaa65e6c.png)
 
@@ -14,19 +14,19 @@ Funsol Billing Helper is a simple, straight-forward implementation of the Androi
 
 #### Extra Dependencies
 
-```kotlin
-
+```kotlin 
 dependencies {
     // Billing Client
-    implementation("com.android.billingclient:billing:8.0.0")
+    implementation("com.android.billingclient:billing:8.2.0")
     // Room DB
-    implementation("androidx.room:room-runtime:2.7.2")
-    implementation("androidx.room:room-ktx:2.7.2")
-    ksp("androidx.room:room-compiler:2.7.2")
+    implementation("androidx.room:room-runtime:2.8.4")
+    implementation("androidx.room:room-ktx:2.8.4")
+    ksp("androidx.room:room-compiler:2.8.4")
 }
-
-
 ```  
+
+
+
 ## Step 1
 
 Add maven repository in project level build.gradle or in latest project setting.gradle file
@@ -48,7 +48,7 @@ Add Funsol Billing Helper dependencies in App level build.gradle.
 ```kotlin
 
 dependencies {
-  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.7'
+  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.8'
 }
 
 ```  
@@ -87,14 +87,15 @@ if consumable in-App
 
 Call this in first stable activity or in App class
 
-### Billing Client Listeners
+### Billing Listeners
 
 ```kotlin
 
     FunSolBillingHelper(this)
     .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
     .setInAppProductIds(mutableListOf("In-App Product Id"))
-    .enableLogging().setBillingClientListener(object : BillingClientListener {
+    .enableLogging()
+    .setBillingListener(object : BillingListener {
       override fun onPurchasesUpdated() {
         Log.i("billing", "onPurchasesUpdated: called when user latest premium status fetched ")
       }
@@ -134,7 +135,7 @@ Subscribe to a Subscription
 ```kotlin
     FunSolBillingHelper(this).buyInApp(activity,"In-App Product Id",false)
 ```
-```fasle```  value used for **isPersonalizedOffer** attribute:
+```false```  value used for **isPersonalizedOffer** attribute:
 
 If your app can be distributed to users in the European Union, use the **isPersonalizedOffer** value ```true``` to disclose to users that an item's price was personalized using automated decision-making.
 
@@ -155,7 +156,13 @@ Subscribe to a offer
 ### Upgrade or Downgrade Subscription
 
  ```kotlin
-    FunSolBillingHelper(this).upgradeOrDowngradeSubscription(this, "New Base Plan ID", "New Offer Id (If offer )", "Old Base Plan ID", ProrationMode)
+    FunSolBillingHelper(this).upgradeOrDowngradeSubscription(
+        this,
+        "New Base Plan ID",
+        "New Offer Id (optional)",
+        "Old Base Plan ID",
+        ProrationMode
+    )
 
 ```
 ```ProrationMode``` is a setting in subscription billing systems that determines how proration is calculated when changes are made to a subscription plan. There are different proration modes, including:
@@ -189,7 +196,13 @@ Subscribe to a offer
 Example :
 
 ```kotlin
-  FunSolBillingHelper(this).upgradeOrDowngradeSubscription(this, "New Base Plan ID", "New Offer Id (If offer )", "Old Base Plan ID", BillingFlowParams.ProrationMode.IMMEDIATE_AND_CHARGE_FULL_PRICE)
+  FunSolBillingHelper(this).upgradeOrDowngradeSubscription(
+      this,
+      "New Base Plan ID",
+      null, // or "Offer Id" if applicable
+      "Old Base Plan ID",
+      BillingFlowParams.ProrationMode.IMMEDIATE_AND_CHARGE_FULL_PRICE
+  )
 ```
 
 ### Billing Listeners
@@ -197,20 +210,36 @@ Example :
 Interface implementation to handle purchase results and errors.
  ```kotlin
 
-      FunSolBillingHelper(this).setBillingEventListener(object : BillingEventListener {
-            override fun onProductsPurchased(purchases: List<Purchase?>) {
-			//call back when purchase occured 
+    FunSolBillingHelper(this)
+        .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
+        .setInAppProductIds(mutableListOf("In-App Product Id"))
+        .setBillingListener(object : BillingListener {
+            override fun onClientReady() {
+                // Called when client is ready after products fetched
             }
 
-            override fun onPurchaseAcknowledged(purchase: Purchase) {
-			 //call back when purchase occur and acknowledged 
+            override fun onClientInitError() {
+                // Called when client failed to initialize
             }
-			
-			 override fun onPurchaseConsumed(purchase: Purchase) {
-			 //call back when purchase occur and consumed 
+
+            override fun onClientAlreadyConnected() {
+                // Called when client is already connected
+            }
+
+            override fun onProductsPurchased(purchases: List<FunsolPurchase?>) {
+                // Called when products are purchased (subs or in-app)
+            }
+
+            override fun onPurchaseAcknowledged(purchase: FunsolPurchase) {
+                // Called when purchase is acknowledged
+            }
+
+            override fun onPurchaseConsumed(purchase: FunsolPurchase) {
+                // Called when purchase is consumed
             }
 
             override fun onBillingError(error: ErrorType) {
+                // Called when billing error occurs
                 when (error) {
                     ErrorType.CLIENT_NOT_READY -> {
 
@@ -274,6 +303,7 @@ Interface implementation to handle purchase results and errors.
                 }
             }
         })
+        .initialize()
  
 ```
 
@@ -464,7 +494,7 @@ This Method used for Releasing the client object and save from memory leaks
   - Improved error handling with clearer messages for unsupported products and missing purchase tokens.
   - Refined logging to provide more informative output during billing operations.
   - Billing client ready call back issue resolved **(Now Exactly call after billing all setup finish)**
-  - Code optimized 
+  - Code optimized
   - Bugs solved
 - 17-12-2024
   - Offer purchase and Base Plan purchase conflict issue resolved
@@ -476,11 +506,16 @@ This Method used for Releasing the client object and save from memory leaks
 - 20-12-2024
   - Downgrade to 7.0.0
 - 11-3-2025
-  - Minor Bugs Solved 
+  - Minor Bugs Solved
   - Product Refund issue Solved
 - 08-08-2025
   - billing version update to 8.0.0
   - Converted to SDK
+- 11-12-2025
+  - Updated to billing-ktx 8.2.0
+  - Made `upgradeOrDowngradeSubscription` public with nullable offerId
+  - Fixed acknowledgment callback to avoid false ACK errors and notify when already acknowledged
+  - Improved premium status update (no extra helper instances)
 ## License
 
 #### MIT License
