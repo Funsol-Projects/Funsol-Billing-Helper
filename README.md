@@ -53,7 +53,7 @@ Add the following to your **app-level** `build.gradle.kts` (or `build.gradle`):
 ```kotlin
 dependencies {
     // Funsol Billing Helper
-    implementation("com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.9")
+    implementation("com.github.Funsol-Projects:Funsol-Billing-Helper:v2.1.0")
 
     // Google Play Billing
     implementation("com.android.billingclient:billing-ktx:9.1.0")
@@ -79,7 +79,7 @@ plugins {
 
 ### Activity is required
 
-Since **v2.0.9**, `FunSolBillingHelper` must be created with an **`Activity`**. A `Context` is not supported.
+Since **v2.1.0**, `FunSolBillingHelper` must be created with an **`Activity`**. A `Context` is not supported.
 
 ```kotlin
 // Inside your Activity
@@ -472,7 +472,7 @@ funSolBillingHelper.release()  // call when billing is no longer needed
   - Made `upgradeOrDowngradeSubscription` public with nullable offerId
   - Fixed acknowledgment callback to avoid false ACK errors
   - Improved premium status update
-- **29-06-2026 — v2.0.9**
+- **29-06-2026 — v2.1.0**
   - Updated to billing-ktx **9.1.0**
   - Multiple purchase options and offers for one-time products (buy, rent, pre-order, discount)
   - `getAllProductPrices()` returns one entry per eligible in-app offer
