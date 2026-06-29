@@ -2,463 +2,429 @@
 
 [![](https://jitpack.io/v/Funsol-Projects/Funsol-Billing-Helper.svg)](https://jitpack.io/#Funsol-Projects/Funsol-Billing-Helper)
 
-Funsol Billing Helper is a simple, straight-forward wrapper for Google Play Billing (billing-ktx 8.2.0).
+A lightweight wrapper around Google Play Billing Library (**billing-ktx 9.1.0**) that simplifies in-app purchases and subscriptions in Android apps.
 
-> Support both IN-App and Subscriptions.
+**Features**
+- One-time (in-app) products and subscriptions
+- Multiple purchase options and offers for one-time products (buy, rent, pre-order, discount)
+- Consumable product support
+- Subscription upgrade / downgrade
+- Purchase acknowledgment, consumption, and local purchase history
+- Premium status helpers
 
-### **Billing subscription model:**
+### Product model
 
-![Subcription](https://user-images.githubusercontent.com/106656179/227849820-8b9e8566-fa6e-40d4-862e-77aaeaa65e6c.png)
+<p align="center">
+  <img src=".github/images/billing-product-model.png" alt="Google Play Billing product model" width="900"/>
+</p>
 
-## Getting Started
+### Quick start
 
-#### Extra Dependencies
+| Step | Description |
+|------|-------------|
+| [Step 1](#step-1--add-maven-repository) | Add JitPack repository |
+| [Step 2](#step-2--add-dependencies) | Add library and required dependencies |
+| [Step 3](#step-3--initialize--listeners) | Initialize `FunSolBillingHelper` and set listeners |
+| [Step 4](#step-4--make-purchases) | Buy in-app products or subscribe |
+| [Step 5](#step-5--product-details--prices) | Fetch prices and build your paywall UI |
+| [Step 6](#step-6--check-premium-status) | Check if the user is premium |
+| [Step 7](#step-7--cancel-subscription) | Open Play subscription management |
+| [Step 8](#step-8--other-utilities) | Offer checks, history, and cleanup |
 
-```kotlin 
+---
+
+## Step 1 — Add Maven Repository
+
+Add JitPack to your project-level `build.gradle` or `settings.gradle`:
+
+```kotlin
+repositories {
+    google()
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+}
+```
+
+---
+
+## Step 2 — Add Dependencies
+
+Add the following to your **app-level** `build.gradle.kts` (or `build.gradle`):
+
+```kotlin
 dependencies {
-    // Billing Client
-    implementation("com.android.billingclient:billing:8.2.0")
-    // Room DB
+    // Funsol Billing Helper
+    implementation("com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.9")
+
+    // Google Play Billing
+    implementation("com.android.billingclient:billing-ktx:9.1.0")
+
+    // Room (used for purchase history)
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")
     ksp("androidx.room:room-compiler:2.8.4")
 }
-```  
+```
 
-
-
-## Step 1
-
-Add maven repository in project level build.gradle or in latest project setting.gradle file
-
-```kotlin 
-
-    repositories {
-        google()
-        mavenCentral()
-        maven { url "https://jitpack.io" }
-    }
- 
-```  
-
-## Step 2
-
-Add Funsol Billing Helper dependencies in App level build.gradle.
+Make sure the `ksp` plugin is applied in your module if you use Kotlin DSL:
 
 ```kotlin
+plugins {
+    id("com.google.devtools.ksp")
+}
+```
 
-dependencies {
-  implementation 'com.github.Funsol-Projects:Funsol-Billing-Helper:v2.0.8'
+---
+
+## Step 3 — Initialize & Listeners
+
+### Activity is required
+
+Since **v2.0.9**, `FunSolBillingHelper` must be created with an **`Activity`**. A `Context` is not supported.
+
+```kotlin
+// Inside your Activity
+private lateinit var funSolBillingHelper: FunSolBillingHelper
+
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    funSolBillingHelper = FunSolBillingHelper(this@MainActivity)
+}
+```
+
+From a `Fragment`, pass `requireActivity()`.
+
+### Subscriptions only
+
+```kotlin
+funSolBillingHelper
+    .setSubProductIds(mutableListOf("subs_product_id_1", "subs_product_id_2"))
+    .initialize()
+```
+
+### Subscriptions + in-app
+
+```kotlin
+funSolBillingHelper
+    .setSubProductIds(mutableListOf("subs_product_id_1"))
+    .setInAppProductIds(mutableListOf("inapp_product_id"))
+    .initialize()
+```
+
+### Consumable in-app products
+
+```kotlin
+funSolBillingHelper
+    .setInAppProductIds(mutableListOf("inapp_product_id", "consumable_product_id"))
+    .setConsumableProductIds(mutableListOf("consumable_product_id"))
+    .initialize()
+```
+
+> Add consumable product IDs in **both** `setInAppProductIds()` and `setConsumableProductIds()`.
+
+### Optional configuration
+
+```kotlin
+funSolBillingHelper
+    .enableLogging(isEnableLog = true)
+    .initialize(enableShowInAppMessages = false)  // disable Play in-app messages
+```
+
+Call `initialize()` from your main billing Activity once product IDs are configured.
+
+### Billing listeners
+
+```kotlin
+funSolBillingHelper
+    .setSubProductIds(mutableListOf("subs_product_id"))
+    .setInAppProductIds(mutableListOf("inapp_product_id"))
+    .setBillingListener(object : BillingListener {
+        override fun onClientReady() {
+            // Products and active purchases loaded — safe to show paywall
+        }
+
+        override fun onClientInitError() {
+            // Billing connection failed
+        }
+
+        override fun onClientAlreadyConnected() {
+            // initialize() called while already connected
+        }
+
+        override fun onProductsPurchased(purchases: List<FunsolPurchase?>) {
+            // Purchase completed
+        }
+
+        override fun onPurchaseAcknowledged(purchase: FunsolPurchase) {
+            // Purchase acknowledged
+        }
+
+        override fun onPurchaseConsumed(purchase: FunsolPurchase) {
+            // Consumable purchase consumed
+        }
+
+        override fun onBillingError(error: ErrorType) {
+            when (error) {
+                ErrorType.USER_CANCELED -> { }
+                ErrorType.ITEM_UNAVAILABLE -> { }  // offer no longer eligible
+                ErrorType.OFFER_NOT_EXIST -> { }
+                ErrorType.PRODUCT_NOT_EXIST -> { }
+                else -> { }
+            }
+        }
+    })
+    .initialize()
+```
+
+---
+
+## Step 4 — Make Purchases
+
+### Buy in-app (one-time) product
+
+**Single buy option:**
+
+```kotlin
+funSolBillingHelper.buyInApp(
+    activity = this@MainActivity,
+    productId = "inapp_product_id",
+    isPersonalizedOffer = false
+)
+```
+
+**Multiple offers** (buy, rent, discount, pre-order) — use IDs from `getAllProductPrices()` (see Step 5):
+
+```kotlin
+funSolBillingHelper.buyInApp(
+    activity = this@MainActivity,
+    productId = "movie_product_id",
+    offerId = "discount_offer_id",        // optional
+    purchaseOptionId = "rent_option_id",    // optional
+    isPersonalizedOffer = false
+)
+```
+
+- `buyInApp()` resolves the correct `offerToken` and verifies eligibility before launch.
+- If the offer is no longer available, `onBillingError(ErrorType.ITEM_UNAVAILABLE)` is called.
+- In-app purchases are acknowledged automatically. Consumables are consumed when listed in `setConsumableProductIds()`.
+- **Rent products:** Play provides the purchase token; your app must grant time-limited access using rental metadata from Step 5.
+- **`isPersonalizedOffer`:** set `true` in the EU when the price was personalized using automated decision-making.
+
+### Subscribe
+
+```kotlin
+funSolBillingHelper.subscribe(this@MainActivity, "base_plan_id")
+funSolBillingHelper.subscribe(this@MainActivity, "base_plan_id", "offer_id")
+```
+
+### Upgrade or downgrade subscription
+
+```kotlin
+funSolBillingHelper.upgradeOrDowngradeSubscription(
+    this@MainActivity,
+    "new_base_plan_id",
+    "new_offer_id",   // or null
+    "old_base_plan_id",
+    BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.IMMEDIATE_AND_CHARGE_FULL_PRICE
+)
+```
+
+| Replacement mode | Behavior |
+|------------------|----------|
+| `DEFERRED` | Takes effect when the old plan expires |
+| `IMMEDIATE_AND_CHARGE_FULL_PRICE` | Immediate; full price + prorated credit |
+| `IMMEDIATE_AND_CHARGE_PRORATED_PRICE` | Immediate; same billing cycle |
+| `IMMEDIATE_WITHOUT_PRORATION` | Immediate; new price on next recurrence |
+| `IMMEDIATE_WITH_TIME_PRORATION` | Immediate; remaining time prorated |
+
+---
+
+## Step 5 — Product Details & Prices
+
+Use this step to populate your paywall, then call `buyInApp()` or `subscribe()` from Step 4.
+
+### Get all product prices (recommended for UI lists)
+
+Returns **one entry per eligible offer** for in-app and subscription products:
+
+```kotlin
+val prices = funSolBillingHelper.getAllProductPrices()
+```
+
+For in-app products with multiple offers, several rows share the same `productId` but have different `offerId` and `purchaseOptionId` values.
+
+**Example: build UI in `onClientReady` and purchase on tap**
+
+```kotlin
+override fun onClientReady() {
+    val inAppPrices = funSolBillingHelper.getAllProductPrices()
+        .filter { it.type == BillingClient.ProductType.INAPP }
+
+    inAppPrices.forEach { item ->
+        // item.productId, item.offerId, item.purchaseOptionId
+        // item.price, item.fullPriceMicro
+        // item.oneTimeOffer — rent / pre-order / discount metadata
+    }
 }
 
-```  
-
-## Step 3 (Setup)
-
-Finally initialise Billing class and setup Subscription Ids
-
-```kotlin 
-
-    FunSolBillingHelper(this)
-    .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
-    .initialize()
- 
-```
-if both subscription and In-App
-
-```kotlin 
-
-    FunSolBillingHelper(this)
-    .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
-    .setInAppProductIds(mutableListOf("In-App Product Id"))
-    .initialize() 
-  
-```
-if consumable in-App
-```kotlin 
-
-    FunSolBillingHelper(this)
-    .setInAppProductIds(mutableListOf("In-App Product Id, In-App consumable Product Id")) 
-	.setConsumableProductIds(mutableListOf("In-App consumable Product Id"))
-    .initialize() 
- 
-```
-**Note: you have add consumable ProductIds in both func ```setInAppProductIds()``` and ```setConsumableProductIds()```**
-
-Call this in first stable activity or in App class
-
-### Billing Listeners
-
-```kotlin
-
-    FunSolBillingHelper(this)
-    .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
-    .setInAppProductIds(mutableListOf("In-App Product Id"))
-    .enableLogging()
-    .setBillingListener(object : BillingListener {
-      override fun onPurchasesUpdated() {
-        Log.i("billing", "onPurchasesUpdated: called when user latest premium status fetched ")
-      }
-
-      override fun onClientReady() {
-        Log.i("billing", "onClientReady: Called when client ready after fetch products details and active product against user")
-      }
-
-      override fun onClientInitError() {
-        Log.i("billing", "onClientInitError: Called when client fail to init")
-      }
-
-        })
-    .initialize()
-
-
-```
-
-### Enable Logs
-
-##### Only for debug
-
-```kotlin
-
-    FunSolBillingHelper(this)
-    .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
-    .setInAppProductIds(mutableListOf("In-App Product Id"))
-    .enableLogging(isEnableLog = true)
-    .initialize()
-
-
-```
-
-### Buy In-App Product
-
-Subscribe to a Subscription
-```kotlin
-    FunSolBillingHelper(this).buyInApp(activity,"In-App Product Id",false)
-```
-```false```  value used for **isPersonalizedOffer** attribute:
-
-If your app can be distributed to users in the European Union, use the **isPersonalizedOffer** value ```true``` to disclose to users that an item's price was personalized using automated decision-making.
-
-**Note: it auto acknowledge the In-App and give callback when product acknowledged successfully.**
-### Subscribe to a Subscription
-
-Subscribe to a Subscription
-```kotlin
-    FunSolBillingHelper(this).subscribe(activity, "Base Plan ID")
-```
-Subscribe to a offer
-```kotlin
-    FunSolBillingHelper(this).subscribe(activity, "Base Plan ID", "Offer ID")
-```
-
-**Note: it auto acknowledge the subscription and give callback when product acknowledged successfully.**
-
-### Upgrade or Downgrade Subscription
-
- ```kotlin
-    FunSolBillingHelper(this).upgradeOrDowngradeSubscription(
-        this,
-        "New Base Plan ID",
-        "New Offer Id (optional)",
-        "Old Base Plan ID",
-        ProrationMode
+fun onProductClicked(item: ProductPriceInfo) {
+    funSolBillingHelper.buyInApp(
+        activity = this@MainActivity,
+        productId = item.productId,
+        offerId = item.offerId.takeIf { it.isNotBlank() },
+        purchaseOptionId = item.purchaseOptionId.takeIf { it.isNotBlank() }
     )
-
-```
-```ProrationMode``` is a setting in subscription billing systems that determines how proration is calculated when changes are made to a subscription plan. There are different proration modes, including:
-
+}
 ```
 
-  1. DEFERRED
+### `ProductPriceInfo` (in-app fields)
 
-    Replacement takes effect when the old plan expires, and the new price will be charged at the same time.
+| Field | Description |
+|-------|-------------|
+| `productId` | Play product ID |
+| `offerId` | Discount or pre-order offer ID |
+| `purchaseOptionId` | Purchase option ID (e.g. buy vs rent) |
+| `offerToken` | Offer token used by the billing flow |
+| `price` / `priceMicro` | Formatted and micro-unit price |
+| `fullPriceMicro` | Original price before discount |
+| `oneTimeOffer` | Extended offer metadata |
+| `duration` | `"lifeTime"`, rental period (ISO 8601), or `"preorder"` |
 
-  2. IMMEDIATE_AND_CHARGE_FULL_PRICE
+### One-time offer metadata (`oneTimeOffer`)
 
-    Replacement takes effect immediately, and the user is charged full price of new plan and is given a full billing cycle of subscription, plus remaining prorated time from the old plan.
+| Property | Description |
+|----------|-------------|
+| `rental` | Rent option — `rentalPeriod`, `rentalExpirationPeriod` |
+| `preorder` | Pre-order — `releaseTimeMillis`, `presaleEndTimeMillis` |
+| `discount` | Discount — `fullPriceMicros`, `percentageDiscount` or `discountAmountMicros` |
+| `validTimeWindow` | Limited-time offer — `startTimeMillis`, `endTimeMillis` |
+| `limitedQuantity` | Per-offer quantity cap — `maximumQuantity`, `remainingQuantity` |
+| `offerTags` | Tags inherited from product, purchase option, and discount |
+| `isRental` / `isPreorder` / `isDiscount` / `isStandardBuy` | Convenience flags |
 
-  3. IMMEDIATE_AND_CHARGE_PRORATED_PRICE
-
-    Replacement takes effect immediately, and the billing cycle remains the same.
-
-  4. IMMEDIATE_WITHOUT_PRORATION
-
-    Replacement takes effect immediately, and the new price will be charged on next recurrence time.
-
-  5. IMMEDIATE_WITH_TIME_PRORATION
-
-    Replacement takes effect immediately, and the remaining time will be prorated and credited to the user.
-
-  6. UNKNOWN_SUBSCRIPTION_UPGRADE_DOWNGRADE_POLICY
- 
-
-```
-Example :
+### Get price for a specific in-app offer
 
 ```kotlin
-  FunSolBillingHelper(this).upgradeOrDowngradeSubscription(
-      this,
-      "New Base Plan ID",
-      null, // or "Offer Id" if applicable
-      "Old Base Plan ID",
-      BillingFlowParams.ProrationMode.IMMEDIATE_AND_CHARGE_FULL_PRICE
-  )
+funSolBillingHelper.getInAppProductPriceById(
+    inAppProductId = "inapp_product_id",
+    offerId = "discount_offer_id",
+    purchaseOptionId = "rent_option_id"
+)?.price
 ```
 
-### Billing Listeners
-
-Interface implementation to handle purchase results and errors.
- ```kotlin
-
-    FunSolBillingHelper(this)
-        .setSubProductIds(mutableListOf("Subs Product Id", "Subs Product Id 2"))
-        .setInAppProductIds(mutableListOf("In-App Product Id"))
-        .setBillingListener(object : BillingListener {
-            override fun onClientReady() {
-                // Called when client is ready after products fetched
-            }
-
-            override fun onClientInitError() {
-                // Called when client failed to initialize
-            }
-
-            override fun onClientAlreadyConnected() {
-                // Called when client is already connected
-            }
-
-            override fun onProductsPurchased(purchases: List<FunsolPurchase?>) {
-                // Called when products are purchased (subs or in-app)
-            }
-
-            override fun onPurchaseAcknowledged(purchase: FunsolPurchase) {
-                // Called when purchase is acknowledged
-            }
-
-            override fun onPurchaseConsumed(purchase: FunsolPurchase) {
-                // Called when purchase is consumed
-            }
-
-            override fun onBillingError(error: ErrorType) {
-                // Called when billing error occurs
-                when (error) {
-                    ErrorType.CLIENT_NOT_READY -> {
-
-                    }
-                    ErrorType.CLIENT_DISCONNECTED -> {
-
-                    }
-                    ErrorType.PRODUCT_NOT_EXIST -> {
-
-                    }
-                    ErrorType.BILLING_ERROR -> {
-
-                    }
-                    ErrorType.USER_CANCELED -> {
-
-                    }
-                    ErrorType.SERVICE_UNAVAILABLE -> {
-
-                    }
-                    ErrorType.BILLING_UNAVAILABLE -> {
-
-                    }
-                    ErrorType.ITEM_UNAVAILABLE -> {
-
-                    }
-                    ErrorType.DEVELOPER_ERROR -> {
-
-                    }
-                    ErrorType.ERROR -> {
-
-                    }
-                    ErrorType.ITEM_ALREADY_OWNED -> {
-
-                    }
-                    ErrorType.ITEM_NOT_OWNED -> {
-
-                    }
-
-                    ErrorType.SERVICE_DISCONNECTED -> {
-
-                    }
-
-                    ErrorType.ACKNOWLEDGE_ERROR -> {
-
-                    }
-
-                    ErrorType.ACKNOWLEDGE_WARNING -> {
-
-                    }
-                    
-                    ErrorType.OLD_PURCHASE_TOKEN_NOT_FOUND -> {
-
-                    }
-					
-                    ErrorType.CONSUME_ERROR -> {
-
-                    }
-                    else -> {
-
-                    }
-                }
-            }
-        })
-        .initialize()
- 
-```
-
-## Step 4 (Product's Detail)
-
-### Get Product price
-
-Get all products prices list include both In-App and Subs
+### Get all offers for one in-app product
 
 ```kotlin
-    FunSolBillingHelper(this).getAllProductPrices()
+funSolBillingHelper.getInAppProductOffers("inapp_product_id")
 ```
-Get In-App Product price
 
+### Filter offers
 
 ```kotlin
-    FunSolBillingHelper(this).getInAppProductPriceById("In-App Product Id").price
+funSolBillingHelper.getInAppProductOfferDetails("inapp_product_id")
+funSolBillingHelper.getInAppBuyOffers("inapp_product_id")
+funSolBillingHelper.getInAppRentOffers("inapp_product_id")
+funSolBillingHelper.getInAppPreorderOffers("inapp_product_id")
+funSolBillingHelper.getInAppDiscountOffers("inapp_product_id")
+funSolBillingHelper.getInAppOffersByTag("inapp_product_id", "featured")
 ```
 
-Get specific subscription price (without offer)
-
+### Subscription prices
 
 ```kotlin
-    FunSolBillingHelper(this).getSubscriptionProductPriceById("Base Plan ID").price
+funSolBillingHelper.getSubscriptionProductPriceById("base_plan_id")?.price
+funSolBillingHelper.getSubscriptionProductPriceById("base_plan_id", "offer_id")?.price
 ```
 
-Get specific subscription price (with offer)
-
+### Raw `ProductDetails`
 
 ```kotlin
-    FunSolBillingHelper(this).getSubscriptionProductPriceById("Base Plan ID", "Offer ID").price
+funSolBillingHelper.getInAppProductDetail(
+    productId = "inapp_product_id",
+    productType = BillingClient.ProductType.INAPP
+)
+
+funSolBillingHelper.getSubscriptionProductDetail(
+    productId = "base_plan_id",
+    offerId = "offer_id",
+    productType = BillingClient.ProductType.SUBS
+)
 ```
 
-This method return ```ProductPriceInfo``` object that contain complete detail   about subscription. To get only price just call ```.Price```.
+---
 
-### Get Single Product Detail
+## Step 6 — Check Premium Status
 
-For In-App Product
+### Any active premium (in-app or subscription)
 
 ```kotlin
-    FunSolBillingHelper(this).getInAppProductDetail("In-App Product Id" ,BillingClient.ProductType.INAPP)
+funSolBillingHelper.isPremiumUser
 ```
-For Subs Product
+
+### In-app
 
 ```kotlin
-    FunSolBillingHelper(this).getSubscriptionProductDetail("Base Plan ID", "Offer ID",BillingClient.ProductType.SUBS)
+funSolBillingHelper.isInAppPremiumUser()
+funSolBillingHelper.isInAppPremiumUserByProductId("inapp_product_id")
 ```
 
-Above methods return ```ProductPriceInfo``` object that contain complete detail about Product.
-
-## Step 5 (Check if any Product buy)
-
-### Check Premium
-
-This variable checks if the user currently holds a premium status through any active in-app or subscription purchase.
-
- ```kotlin
-  FunSolBillingHelper(this).isPremiumUser
-
- ``` 
-
-
-### Check In-App
-
-For check if user buy any In-App Product
-
- ```kotlin
-  FunSolBillingHelper(this).isInAppPremiumUser() : Boolean
-
- ``` 
-
-For check specific In-App Product
-
-``` kotlin
-  FunSolBillingHelper(this).isInAppPremiumUserByProductId("In-App Product Id") : Boolean
-
- ```
-
-### Check Subscription
-
-For check if any subscription is subscribe
-
- ```kotlin
-  FunSolBillingHelper(this).isSubsPremiumUser() : Boolean
-
- ``` 
-
-For check if any specific subscription is subscribe (by Base Plan ID)
-
-``` kotlin
-  FunSolBillingHelper(this).isSubsPremiumUserByBasePlanId("Base Plan ID") : Boolean
-
- ``` 
-For check if any specific subscription is subscribe (by Subscription ID)
-
-``` kotlin
-  FunSolBillingHelper(this).isSubsPremiumUserBySubProductID("Subscription Product ID") : Boolean
-
- ``` 
-
-## Step 6 (Cancel any subscription)
-
-### Cancel  Subscription
+### Subscription
 
 ```kotlin
-FunSolBillingHelper(this).unsubscribe(this,"Subscription Product ID")
+funSolBillingHelper.isSubsPremiumUser()
+funSolBillingHelper.isSubsPremiumUserByBasePlanId("base_plan_id")
+funSolBillingHelper.isSubsPremiumUserBySubProductID("subscription_product_id")
 ```
 
-## Step 7 (Other Utils for Billing)
+---
 
-### Check Offer Availability
+## Step 7 — Cancel Subscription
 
-Use this method to verify if a specific offer is available for a given base plan ID and offer ID.
+Opens Google Play subscription management for the given subscription product ID:
 
 ```kotlin
-FunSolBillingHelper(this).isOfferAvailable(basePlanId: String, offerId: String): Boolean
+funSolBillingHelper.unsubscribe(this@MainActivity, "subscription_product_id")
 ```
 
-### Check if User was Ever Premium
+---
 
-This method checks if the user has ever purchased any premium products or subscriptions.
+## Step 8 — Other Utilities
+
+### Check offer availability
 
 ```kotlin
-FunSolBillingHelper(this).wasPremiumUser(): Boolean
+// Subscription offer
+funSolBillingHelper.isSubscriptionOfferAvailable("base_plan_id", "offer_id")
+
+// In-app offer
+funSolBillingHelper.isInAppOfferAvailable(
+    inAppProductId = "inapp_product_id",
+    inAppOfferId = "discount_offer_id",
+    purchaseOptionId = "rent_option_id"
+)
+
+// Re-check before purchase (region, quantity, or time window may have changed)
+funSolBillingHelper.isOneTimeOfferStillEligible("inapp_product_id", offerToken)
 ```
 
-### Retrieve Purchased Plans History
-
-Fetches the user's complete purchase history of premium products and subscriptions.
+### Purchase history
 
 ```kotlin
-FunSolBillingHelper(this).getPurchasedPlansHistory(): List<PurchasedProduct>
+funSolBillingHelper.wasPremiumUser()            // suspend
+funSolBillingHelper.getPurchasedPlansHistory()  // List<PurchasedProduct>
 ```
 
-###Check subscription support
+### Billing client lifecycle
 
 ```kotlin
-FunSolBillingHelper(this).areSubscriptionsSupported() : Boolean
-
-```
-###Check Billing Client is Ready
-
-```kotlin
-FunSolBillingHelper(this).isBillingClientReady()
-
+funSolBillingHelper.areSubscriptionsSupported()
+funSolBillingHelper.isBillingClientReady()
+funSolBillingHelper.checkAndRetryForPurchaseAcknowledgement()
+funSolBillingHelper.release()  // call when billing is no longer needed
 ```
 
-### Release billing client object
-
-Call this method when app close or when billing not needed any more.
-```kotlin
-FunSolBillingHelper(this).release()
-
-```
-This Method used for Releasing the client object and save from memory leaks
+---
 
 ## CHANGELOG
 
@@ -470,7 +436,7 @@ This Method used for Releasing the client object and save from memory leaks
   - Now initialize billing lib in App class (if you want)
   - Billing client ready check issue solved
 - 13-06-2024
-  - Billing library  updated to 7.0.0
+  - Billing library updated to 7.0.0
   - Threading consumption improved
   - Billing client ready call back issue resolved
   - Products price fetching issues resolved
@@ -478,48 +444,51 @@ This Method used for Releasing the client object and save from memory leaks
   - Proper logging implemented
   - Price fetch missing related issues solved
 - 02-07-2024
-  - Must Call .initialize() after initial setup (Read documentation again for clarity)
+  - Must Call `.initialize()` after initial setup
   - ProductList empty crash resolved
 - 12-09-2024
   - Micro Price variable added in product price info
   - price currency code added
   - Bugs solved
 - 13-11-2024
-  - Billing library  updated to 7.1.1
-  - isOfferAvailable(basePlanId, offerId): Checks if a specific offer is available for a given base plan ID and offer ID.
-  - wasPremiumUser(): Determines if the user has ever purchased a premium product or subscription.
-  - getPurchasedPlansHistory(): Fetches the user’s purchase history of premium products and subscriptions
-  - isPremiumUser: Checks the user’s current premium status based on active in-app purchases or subscriptions **(No need to maintain a separate SharedPreferences)**
-  - getInAppProductPriceById(inAppProductId): Retrieves price information for a specific in-app product.
-  - Improved error handling with clearer messages for unsupported products and missing purchase tokens.
-  - Refined logging to provide more informative output during billing operations.
-  - Billing client ready call back issue resolved **(Now Exactly call after billing all setup finish)**
-  - Code optimized
-  - Bugs solved
+  - Billing library updated to 7.1.1
+  - `isSubscriptionOfferAvailable(basePlanId, offerId)` added
+  - `wasPremiumUser()` and `getPurchasedPlansHistory()` added
+  - `isPremiumUser` property added
+  - `getInAppProductPriceById(inAppProductId)` added
+  - Improved error handling and logging
 - 17-12-2024
   - Offer purchase and Base Plan purchase conflict issue resolved
   - Billing client release issue resolved
-  - Bugs resolved
-  - Introduced currency symbol in product info
-- 19-12-2024
-  - Bugs resolved
 - 20-12-2024
   - Downgrade to 7.0.0
 - 11-3-2025
-  - Minor Bugs Solved
-  - Product Refund issue Solved
+  - Minor bugs solved
+  - Product refund issue solved
 - 08-08-2025
-  - billing version update to 8.0.0
+  - Billing version update to 8.0.0
   - Converted to SDK
 - 11-12-2025
   - Updated to billing-ktx 8.2.0
   - Made `upgradeOrDowngradeSubscription` public with nullable offerId
-  - Fixed acknowledgment callback to avoid false ACK errors and notify when already acknowledged
-  - Improved premium status update (no extra helper instances)
+  - Fixed acknowledgment callback to avoid false ACK errors
+  - Improved premium status update
+- **29-06-2026 — v2.0.9**
+  - Updated to billing-ktx **9.1.0**
+  - Multiple purchase options and offers for one-time products (buy, rent, pre-order, discount)
+  - `getAllProductPrices()` returns one entry per eligible in-app offer
+  - `buyInApp()` supports `offerId` and `purchaseOptionId`
+  - `ProductPriceInfo` extended with `purchaseOptionId`, `offerToken`, `fullPriceMicro`, `oneTimeOffer`
+  - `OneTimeProductOfferInfo` for rental, pre-order, discount, time window, quantity, and tags
+  - Offer filter helpers and `isOneTimeOfferStillEligible()`
+  - `isInAppOfferAvailable()` added; subscription check renamed to `isSubscriptionOfferAvailable()`
+  - `FunSolBillingHelper` requires an `Activity` (not `Context`)
+  - `initialize(enableShowInAppMessages)` for Play in-app messages
+
 ## License
 
 #### MIT License
-#### Copyright (c) 2023  Funsol Technologies Pvt Ltd
+#### Copyright (c) 2026 Funsol Technologies Pvt Ltd
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -535,4 +504,3 @@ NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPO
 NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES
 OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
