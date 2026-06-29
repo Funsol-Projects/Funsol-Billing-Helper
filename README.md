@@ -14,9 +14,8 @@ A lightweight wrapper around Google Play Billing Library (**billing-ktx 9.1.0**)
 
 ### Product model
 
-<p align="center">
-  <img src=".github/images/billing-product-model.png" alt="Google Play Billing product model" width="900"/>
-</p>
+<img width="1536" height="1024" alt="product_model" src="https://github.com/user-attachments/assets/1d6ef651-48f5-44d9-8441-6b7848739d6b" />
+
 
 ### Quick start
 
